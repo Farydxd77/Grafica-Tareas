@@ -1,15 +1,16 @@
-﻿
-namespace Opeten_Minecraf
+﻿using System;
+
+namespace Opentk_2222
 {
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
-            using (Game game = new Game(500, 500))
+            using (var game = new Game())
             {
-                game.Run();
+                game.Run(60.0, 60.0);
             }
-
         }
     }
 }

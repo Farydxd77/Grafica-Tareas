@@ -29,3 +29,4 @@ C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecra
 C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net8.0\Opeten-Minecraf.genruntimeconfig.cache
 C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net8.0\ref\Opeten-Minecraf.dll
 C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\bin\Debug\net8.0\StbImageSharp.dll
+C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net8.0\Opeten-Minecraf.sourcelink.json

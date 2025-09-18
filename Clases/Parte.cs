@@ -1,159 +1,96 @@
-﻿using OpenTK.Mathematics;
-using Opeten_Minecraf.Clases;
-using System;
-using System.Collections.Generic;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Collections.Generic;
-using OpenTK.Mathematics;
-
-namespace Opeten_Minecraf.Clases
+﻿
+using OpenTK;
+namespace Opentk_2222.Clases
 {
-    /// <summary>
-    /// Gestiona todas las partes/caras que componen un objeto 3D
-    /// </summary>
-    public class Partes
+    public class Parte
     {
-        public List<Poligono> Caras { get; private set; }
+        public string Nombre { get; set; }
+        public List<Poligono> Caras { get; set; }
+        public Punto CentroMasa { get; private set; }
+        public Vector3 Posicion { get; set; }
+        public Vector3 Rotacion { get; set; }
+        public Vector3 Escala { get; set; }
+        public Vector3 Color { get; set; }
 
-        public Partes()
+        public Parte(string nombre)
         {
+            Nombre = nombre;
             Caras = new List<Poligono>();
+            CentroMasa = new Punto(0, 0, 0);
+            Posicion = Vector3.Zero;
+            Rotacion = Vector3.Zero;
+            Escala = Vector3.One;
+            Color = Vector3.One;
         }
 
-        /// <summary>
-        /// Agrega una cara/polígono a la colección
-        /// </summary>
         public void AgregarCara(Poligono cara)
         {
             Caras.Add(cara);
+            CalcularCentroMasa();
         }
 
-        /// <summary>
-        /// Crea todas las 6 caras de un cubo
-        /// </summary>
-        public static Partes CrearCarasCubo()
+        public void AgregarCaras(params Poligono[] caras)
         {
-            var partes = new Partes();
-            uint indiceBased = 0;
-
-            // Coordenadas de textura estándar para cada cara
-            var texCoords = new Vector2[]
+            foreach (var cara in caras)
             {
-                new Vector2(0f, 1f), // top left
-                new Vector2(1f, 1f), // top right  
-                new Vector2(1f, 0f), // bottom right
-                new Vector2(0f, 0f)  // bottom left
+                Caras.Add(cara);
+            }
+            CalcularCentroMasa();
+        }
+
+        private void CalcularCentroMasa()
+        {
+            if (Caras.Count == 0)
+            {
+                CentroMasa = new Punto(0, 0, 0);
+                return;
+            }
+
+            var todosPuntos = new List<Punto>();
+            foreach (var cara in Caras)
+            {
+                todosPuntos.AddRange(cara.Vertices);
+            }
+
+            CentroMasa = Punto.CalcularCentroMasa(todosPuntos);
+        }
+
+        public static Parte CrearCubo(string nombre, Vector3 posicion, Vector3 tamaño, Vector3 color)
+        {
+            var parte = new Parte(nombre);
+            parte.Posicion = posicion;
+            parte.Color = color;
+
+            float x = posicion.X, y = posicion.Y, z = posicion.Z;
+            float w = tamaño.X / 2f, h = tamaño.Y / 2f, d = tamaño.Z / 2f;
+
+            var vertices = new Punto[]
+            {
+                new Punto(x - w, y - h, z + d), // 0
+                new Punto(x + w, y - h, z + d), // 1
+                new Punto(x + w, y + h, z + d), // 2
+                new Punto(x - w, y + h, z + d), // 3
+                new Punto(x - w, y - h, z - d), // 4
+                new Punto(x + w, y - h, z - d), // 5
+                new Punto(x + w, y + h, z - d), // 6
+                new Punto(x - w, y + h, z - d), // 7
             };
 
-            // Cara frontal (Z = 0.5f)
-            var caraFrontal = Poligono.CrearCaraCuadrada("Frontal",
-                new Punto(-0.5f, 0.5f, 0.5f, texCoords[0].X, texCoords[0].Y), // top left
-                new Punto(0.5f, 0.5f, 0.5f, texCoords[1].X, texCoords[1].Y), // top right
-                new Punto(0.5f, -0.5f, 0.5f, texCoords[2].X, texCoords[2].Y), // bottom right
-                new Punto(-0.5f, -0.5f, 0.5f, texCoords[3].X, texCoords[3].Y), // bottom left
-                indiceBased);
-            partes.AgregarCara(caraFrontal);
-            indiceBased += 4;
+            var caraFrontal = Poligono.CrearCaraCuadrada(vertices[0], vertices[1], vertices[2], vertices[3]);
+            var caraTrasera = Poligono.CrearCaraCuadrada(vertices[4], vertices[5], vertices[6], vertices[7]);
+            var caraIzquierda = Poligono.CrearCaraCuadrada(vertices[0], vertices[4], vertices[7], vertices[3]);
+            var caraDerecha = Poligono.CrearCaraCuadrada(vertices[5], vertices[1], vertices[2], vertices[6]);
+            var caraInferior = Poligono.CrearCaraCuadrada(vertices[0], vertices[1], vertices[5], vertices[4]);
+            var caraSuperior = Poligono.CrearCaraCuadrada(vertices[3], vertices[2], vertices[6], vertices[7]);
 
-            // Cara trasera (Z = -0.5f)
-            var caraTrasera = Poligono.CrearCaraCuadrada("Trasera",
-                new Punto(-0.5f, 0.5f, -0.5f, texCoords[0].X, texCoords[0].Y),
-                new Punto(0.5f, 0.5f, -0.5f, texCoords[1].X, texCoords[1].Y),
-                new Punto(0.5f, -0.5f, -0.5f, texCoords[2].X, texCoords[2].Y),
-                new Punto(-0.5f, -0.5f, -0.5f, texCoords[3].X, texCoords[3].Y),
-                indiceBased);
-            partes.AgregarCara(caraTrasera);
-            indiceBased += 4;
+            parte.AgregarCaras(caraFrontal, caraTrasera, caraIzquierda, caraDerecha, caraInferior, caraSuperior);
 
-            // Cara izquierda (X = -0.5f)
-            var caraIzquierda = Poligono.CrearCaraCuadrada("Izquierda",
-                new Punto(-0.5f, 0.5f, -0.5f, texCoords[0].X, texCoords[0].Y),
-                new Punto(-0.5f, 0.5f, 0.5f, texCoords[1].X, texCoords[1].Y),
-                new Punto(-0.5f, -0.5f, 0.5f, texCoords[2].X, texCoords[2].Y),
-                new Punto(-0.5f, -0.5f, -0.5f, texCoords[3].X, texCoords[3].Y),
-                indiceBased);
-            partes.AgregarCara(caraIzquierda);
-            indiceBased += 4;
-
-            // Cara derecha (X = 0.5f)
-            var caraDerecha = Poligono.CrearCaraCuadrada("Derecha",
-                new Punto(0.5f, 0.5f, 0.5f, texCoords[0].X, texCoords[0].Y),
-                new Punto(0.5f, 0.5f, -0.5f, texCoords[1].X, texCoords[1].Y),
-                new Punto(0.5f, -0.5f, -0.5f, texCoords[2].X, texCoords[2].Y),
-                new Punto(0.5f, -0.5f, 0.5f, texCoords[3].X, texCoords[3].Y),
-                indiceBased);
-            partes.AgregarCara(caraDerecha);
-            indiceBased += 4;
-
-            // Cara superior (Y = 0.5f)
-            var caraSuperior = Poligono.CrearCaraCuadrada("Superior",
-                new Punto(-0.5f, 0.5f, -0.5f, texCoords[0].X, texCoords[0].Y),
-                new Punto(0.5f, 0.5f, -0.5f, texCoords[1].X, texCoords[1].Y),
-                new Punto(0.5f, 0.5f, 0.5f, texCoords[2].X, texCoords[2].Y),
-                new Punto(-0.5f, 0.5f, 0.5f, texCoords[3].X, texCoords[3].Y),
-                indiceBased);
-            partes.AgregarCara(caraSuperior);
-            indiceBased += 4;
-
-            // Cara inferior (Y = -0.5f)
-            var caraInferior = Poligono.CrearCaraCuadrada("Inferior",
-                new Punto(-0.5f, -0.5f, 0.5f, texCoords[0].X, texCoords[0].Y),
-                new Punto(0.5f, -0.5f, 0.5f, texCoords[1].X, texCoords[1].Y),
-                new Punto(0.5f, -0.5f, -0.5f, texCoords[2].X, texCoords[2].Y),
-                new Punto(-0.5f, -0.5f, -0.5f, texCoords[3].X, texCoords[3].Y),
-                indiceBased);
-            partes.AgregarCara(caraInferior);
-
-            return partes;
+            return parte;
         }
 
-        /// <summary>
-        /// Obtiene todos los vértices de todas las caras
-        /// </summary>
-        public List<Vector3> ObtenerTodosLosVertices()
+        public override string ToString()
         {
-            var vertices = new List<Vector3>();
-            foreach (var cara in Caras)
-            {
-                foreach (var punto in cara.Puntos)
-                {
-                    vertices.Add(punto.Posicion);
-                }
-            }
-            return vertices;
-        }
-
-        /// <summary>
-        /// Obtiene todas las coordenadas de textura de todas las caras
-        /// </summary>
-        public List<Vector2> ObtenerTodasLasCoordenadasTextura()
-        {
-            var coordenadas = new List<Vector2>();
-            foreach (var cara in Caras)
-            {
-                foreach (var punto in cara.Puntos)
-                {
-                    coordenadas.Add(punto.CoordenadaTextura);
-                }
-            }
-            return coordenadas;
-        }
-
-        /// <summary>
-        /// Obtiene todos los índices de todas las caras
-        /// </summary>
-        public List<uint> ObtenerTodosLosIndices()
-        {
-            var indices = new List<uint>();
-            foreach (var cara in Caras)
-            {
-                indices.AddRange(cara.Indices);
-            }
-            return indices;
+            return $"{Nombre} - {Caras.Count} caras - Centro: {CentroMasa}";
         }
     }
 }

@@ -1,0 +1,6 @@
+C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net472\Opeten-Minecraf.csproj.AssemblyReference.cache
+C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net472\Opeten-Minecraf.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net472\Opeten-Minecraf.AssemblyInfoInputs.cache
+C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net472\Opeten-Minecraf.AssemblyInfo.cs
+C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net472\Opeten-Minecraf.csproj.CoreCompileInputs.cache
+C:\Users\modos\OneDrive\Desktop\Java_Ejercicios_Practicos\Grafica\Opeten-Minecraf\Opeten-Minecraf\obj\Debug\net472\Opeten-Minecraf.sourcelink.json

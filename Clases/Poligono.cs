@@ -1,42 +1,34 @@
-﻿using Opeten_Minecraf.Clases;
-using System;
-using System.Collections.Generic;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Collections.Generic;
-
-namespace Opeten_Minecraf.Clases
+﻿
+using OpenTK;
+namespace Opentk_2222.Clases
 {
-    /// <summary>
-    /// Representa una cara/polígono de un cubo, compuesta por puntos e índices
-    /// </summary>
     public class Poligono
     {
-        public List<Punto> Puntos { get; private set; }
-        public List<uint> Indices { get; private set; }
-        public string Nombre { get; set; }
+        public List<Punto> Vertices { get; set; }
+        public List<uint> Indices { get; set; }
+        public Punto CentroMasa { get; private set; }
 
-        public Poligono(string nombre)
+        public Poligono(int capacidadVertices = 4)
         {
-            Nombre = nombre;
-            Puntos = new List<Punto>();
-            Indices = new List<uint>();
+            Vertices = new List<Punto>(capacidadVertices);
+            Indices = new List<uint>(capacidadVertices * 2);
+            CentroMasa = new Punto(0, 0, 0);
         }
 
-        /// <summary>
-        /// Agrega un punto al polígono
-        /// </summary>
-        public void AgregarPunto(Punto punto)
+        public void AgregarVertice(Punto punto)
         {
-            Puntos.Add(punto);
+            Vertices.Add(punto);
+            CalcularCentroMasa();
         }
 
-        /// <summary>
-        /// Agrega índices para formar triángulos
-        /// </summary>
+        public void AgregarIndice(uint indice)
+        {
+            if (indice >= Vertices.Count)
+                throw new ArgumentException($"Indice {indice} no existe solo hay {Vertices.Count} vertices");
+
+            Indices.Add(indice);
+        }
+
         public void AgregarIndices(params uint[] indices)
         {
             foreach (uint indice in indices)
@@ -45,29 +37,45 @@ namespace Opeten_Minecraf.Clases
             }
         }
 
-        /// <summary>
-        /// Crea una cara cuadrada con 4 puntos y 2 triángulos
-        /// </summary>
-        public static Poligono CrearCaraCuadrada(string nombre,
-            Punto puntoTopLeft, Punto puntoTopRight,
-            Punto puntoBottomRight, Punto puntoBottomLeft,
-            uint baseIndex)
+        private void CalcularCentroMasa()
         {
-            var poligono = new Poligono(nombre);
+            CentroMasa = Punto.CalcularCentroMasa(Vertices);
+        }
 
-            // Agregar los 4 puntos
-            poligono.AgregarPunto(puntoTopLeft);
-            poligono.AgregarPunto(puntoTopRight);
-            poligono.AgregarPunto(puntoBottomRight);
-            poligono.AgregarPunto(puntoBottomLeft);
+        public Vector3 CalcularNormal()
+        {
+            if (Vertices.Count < 3) return Vector3.UnitY;
 
-            // Agregar índices para 2 triángulos
-            // Triángulo 1
-            poligono.AgregarIndices(baseIndex + 0, baseIndex + 1, baseIndex + 2);
-            // Triángulo 2
-            poligono.AgregarIndices(baseIndex + 2, baseIndex + 3, baseIndex + 0);
+            Vector3 v1 = Vertices[1].ToVector3() - Vertices[0].ToVector3();
+            Vector3 v2 = Vertices[2].ToVector3() - Vertices[0].ToVector3();
+            Vector3 normal = Vector3.Cross(v1, v2);
 
-            return poligono;
+            return normal.LengthSquared > 0 ? Vector3.Normalize(normal) : Vector3.UnitY;
+        }
+
+        public static Poligono CrearCaraCuadrada(Punto p1, Punto p2, Punto p3, Punto p4)
+        {
+            if (p1 == null || p2 == null || p3 == null || p4 == null)
+                throw new ArgumentNullException("Ningún punto puede ser null");
+
+            var cara = new Poligono();
+
+            cara.AgregarVertice(p1);
+            cara.AgregarVertice(p2);
+            cara.AgregarVertice(p3);
+            cara.AgregarVertice(p4);
+
+            cara.AgregarIndices(0, 1, 2);
+            cara.AgregarIndices(2, 3, 0);
+
+            return cara;
+        }
+
+        public void Limpiar()
+        {
+            Vertices.Clear();
+            Indices.Clear();
+            CentroMasa = new Punto(0, 0, 0);
         }
     }
 }

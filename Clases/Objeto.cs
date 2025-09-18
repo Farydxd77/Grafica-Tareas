@@ -1,105 +1,124 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using OpenTK.Mathematics;
-using System.Collections.Generic;
-
-namespace Opeten_Minecraf.Clases
+﻿
+using OpenTK;
+namespace Opentk_2222.Clases
 {
-    /// <summary>
-    /// Representa un objeto 3D completo (como un cubo) con todas sus partes
-    /// </summary>
     public class Objeto
     {
-        public Partes Partes { get; private set; }
+        public string Nombre { get; set; }
+        public List<Parte> Partes { get; set; }
+        public Punto CentroMasa { get; private set; }
         public Vector3 Posicion { get; set; }
         public Vector3 Rotacion { get; set; }
         public Vector3 Escala { get; set; }
-        public string Nombre { get; set; }
+        public Vector3 ColorBase { get; set; }
 
         public Objeto(string nombre)
         {
             Nombre = nombre;
-            Partes = new Partes();
+            Partes = new List<Parte>();
+            CentroMasa = new Punto(0, 0, 0);
             Posicion = Vector3.Zero;
             Rotacion = Vector3.Zero;
             Escala = Vector3.One;
+            ColorBase = Vector3.One;
         }
 
-        /// <summary>
-        /// Crea un cubo completo con todas sus caras
-        /// </summary>
-        public static Objeto CrearCubo(string nombre)
+        public void AgregarParte(Parte parte)
         {
-            var cubo = new Objeto(nombre);
-            cubo.Partes = Partes.CrearCarasCubo();
-            return cubo;
+            Partes.Add(parte);
+            CalcularCentroMasa();
         }
 
-        /// <summary>
-        /// Obtiene la matriz de transformación del objeto
-        /// </summary>
-        public Matrix4 ObtenerMatrizTransformacion()
+        public void AgregarPartes(params Parte[] partes)
         {
-            Matrix4 translation = Matrix4.CreateTranslation(Posicion);
-            Matrix4 rotationX = Matrix4.CreateRotationX(Rotacion.X);
-            Matrix4 rotationY = Matrix4.CreateRotationY(Rotacion.Y);
-            Matrix4 rotationZ = Matrix4.CreateRotationZ(Rotacion.Z);
-            Matrix4 scale = Matrix4.CreateScale(Escala);
-
-            // Orden: Escala -> Rotación -> Traslación
-            return scale * rotationX * rotationY * rotationZ * translation;
+            foreach (var parte in partes)
+            {
+                Partes.Add(parte);
+            }
+            CalcularCentroMasa();
         }
 
-        /// <summary>
-        /// Obtiene todos los vértices del objeto
-        /// </summary>
-        public List<Vector3> ObtenerVertices()
+        public void EliminarParte(string nombreParte)
         {
-            return Partes.ObtenerTodosLosVertices();
+            Partes.RemoveAll(p => p.Nombre == nombreParte);
+            CalcularCentroMasa();
         }
 
-        /// <summary>
-        /// Obtiene todas las coordenadas de textura del objeto
-        /// </summary>
-        public List<Vector2> ObtenerCoordenadasTextura()
+        public Parte BuscarParte(string nombreParte)
         {
-            return Partes.ObtenerTodasLasCoordenadasTextura();
+            return Partes.Find(p => p.Nombre == nombreParte);
         }
 
-        /// <summary>
-        /// Obtiene todos los índices del objeto
-        /// </summary>
-        public List<uint> ObtenerIndices()
+        private void CalcularCentroMasa()
         {
-            return Partes.ObtenerTodosLosIndices();
+            if (Partes.Count == 0)
+            {
+                CentroMasa = new Punto(0, 0, 0);
+                return;
+            }
+
+            var centrosMasa = Partes.Select(p => p.CentroMasa).ToList();
+            CentroMasa = Punto.CalcularCentroMasa(centrosMasa);
         }
 
-        /// <summary>
-        /// Rota el objeto en el eje Y
-        /// </summary>
-        public void RotarY(float angulo)
+        public List<float> ObtenerVerticesParaRender()
         {
-            Rotacion = new Vector3(Rotacion.X, Rotacion.Y + angulo, Rotacion.Z);
+            var vertices = new List<float>();
+
+            foreach (var parte in Partes)
+            {
+                foreach (var cara in parte.Caras)
+                {
+                    foreach (var vertice in cara.Vertices)
+                    {
+                        vertices.Add(vertice.X);
+                        vertices.Add(vertice.Y);
+                        vertices.Add(vertice.Z);
+
+                        var normal = cara.CalcularNormal();
+                        vertices.Add(normal.X);
+                        vertices.Add(normal.Y);
+                        vertices.Add(normal.Z);
+                    }
+                }
+            }
+
+            return vertices;
         }
 
-        /// <summary>
-        /// Mueve el objeto a una nueva posición
-        /// </summary>
-        public void Mover(Vector3 nuevaPosicion)
+        public List<uint> ObtenerIndicesParaRender()
         {
-            Posicion = nuevaPosicion;
+            var indices = new List<uint>();
+            uint baseIndex = 0;
+
+            foreach (var parte in Partes)
+            {
+                foreach (var cara in parte.Caras)
+                {
+                    foreach (var indice in cara.Indices)
+                    {
+                        indices.Add(baseIndex + indice);
+                    }
+                    baseIndex += (uint)cara.Vertices.Count;
+                }
+            }
+
+            return indices;
         }
 
-        /// <summary>
-        /// Cambia la escala del objeto
-        /// </summary>
-        public void Escalar(Vector3 nuevaEscala)
+        public Vector3 ObtenerColorParte(string nombreParte)
         {
-            Escala = nuevaEscala;
+            var parte = BuscarParte(nombreParte);
+            if (parte != null && parte.Color != Vector3.One)
+                return parte.Color;
+
+            return ColorBase;
         }
+
+        public override string ToString()
+        {
+            return $"{Nombre} - {Partes.Count} partes - Centro: {CentroMasa}";
+        }
+
     }
 }

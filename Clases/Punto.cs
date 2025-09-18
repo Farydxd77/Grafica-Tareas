@@ -1,31 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OpenTK; // OpenTK 3.x usa OpenTK directamente
 
-using OpenTK.Mathematics;
 
-namespace Opeten_Minecraf.Clases
+namespace Opentk_2222.Clases
 {
-    /// <summary>
-    /// Representa un punto en el espacio 3D con coordenadas de textura
-    /// </summary>
     public class Punto
     {
-        public Vector3 Posicion { get; set; }
-        public Vector2 CoordenadaTextura { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
 
-        public Punto(Vector3 posicion, Vector2 coordenadaTextura)
+        public Punto(float x, float y, float z)
         {
-            Posicion = posicion;
-            CoordenadaTextura = coordenadaTextura;
+            X = x;
+            Y = y;
+            Z = z;
         }
 
-        public Punto(float x, float y, float z, float u, float v)
+        public Vector3 ToVector3()
         {
-            Posicion = new Vector3(x, y, z);
-            CoordenadaTextura = new Vector2(u, v);
+            return new Vector3(X, Y, Z);
+        }
+
+        public static Punto CalcularCentroMasa(List<Punto> puntos)
+        {
+            if (puntos == null || puntos.Count == 0)
+                return new Punto(0, 0, 0);
+
+            float totalX = puntos.Sum(p => p.X);
+            float totalY = puntos.Sum(p => p.Y);
+            float totalZ = puntos.Sum(p => p.Z);
+
+            return new Punto(
+                totalX / puntos.Count,
+                totalY / puntos.Count,
+                totalZ / puntos.Count
+            );
+        }
+
+        public override string ToString()
+        {
+            return $"({X:F2}, {Y:F2}, {Z:F2})";
         }
     }
 }
