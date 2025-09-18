@@ -1,4 +1,4 @@
-﻿// ===================== Game.cs CORREGIDO - MÉTODOS FALTANTES AÑADIDOS =====================
+﻿// ===================== Game.cs FINAL CORREGIDO - SISTEMA DE TRANSFORMACIONES COMPLETO =====================
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -35,7 +35,7 @@ namespace Opentk_2222
         private float rotationTime;
         #endregion
 
-        #region Variables de Transformaciones - MEJORADAS
+        #region Variables de Transformaciones
         private NivelSeleccion nivelActual = NivelSeleccion.Escenario;
         private int objetoSeleccionado = 0;
         private int parteSeleccionada = 0;
@@ -83,7 +83,8 @@ namespace Opentk_2222
             public int EBO;
             public int IndexCount;
             public Vector3 BaseColor;
-            public Vector3 Position;
+            public Vector3 PosicionBase;       // Posición base sin transformaciones
+            public Vector3 PosicionRelativa;   // Posición relativa a su objeto
             public Vector3 Rotation;
             public Vector3 Scale;
             public string NombreParte;
@@ -92,7 +93,7 @@ namespace Opentk_2222
         #endregion
 
         // Constructor
-        public Game() : base(1024, 768, GraphicsMode.Default, "Setup de Computadora 3D - OpenTK 3.1.0 + Partes")
+        public Game() : base(1024, 768, GraphicsMode.Default, "Setup 3D - SISTEMA CORREGIDO COMPLETO")
         {
         }
 
@@ -107,7 +108,7 @@ namespace Opentk_2222
         {
             ConfigurarOpenGL();
             InicializarShaders();
-            CrearEscenaSimple();
+            CrearEscenaFinal();
             PrepararBuffersRenderizado();
             MostrarControles();
         }
@@ -124,156 +125,235 @@ namespace Opentk_2222
 
         private void MostrarControles()
         {
-            var controles = new[]
-            {
-                "=== CONTROLES OPENTK 3.1.0 + PARTES ===",
-                "Tab: Cambiar modo (Cámara/Objetos)",
-                "C: Cambiar nivel (Escenario → Objeto → Parte)",
-                "1-4: Seleccionar objeto | Q/E: Cambiar parte",
-                "F5: Guardar escena | F9: Cargar última escena",
-                "",
-                "MODO CÁMARA:",
-                "  WASD: Mover | QE: Subir/Bajar | Flechas: Rotar",
-                "",
-                "MODO OBJETOS/PARTES:",
-                "  WASD: Translation | RF: Rotar Y | TG: Rotar X",
-                "  +/-: Scale | XYZ: Reflection | Space: Reset",
-                "============================================="
-            };
-
-            foreach (var linea in controles)
-                Console.WriteLine(linea);
+            Console.WriteLine("═══════════════════════════════════════════════");
+            Console.WriteLine("        SETUP 3D - SISTEMA CORREGIDO          ");
+            Console.WriteLine("═══════════════════════════════════════════════");
+            Console.WriteLine("Tab: Cambiar modo (Cámara/Transformaciones)");
+            Console.WriteLine("C: Cambiar nivel (Escenario → Objeto → Parte)");
+            Console.WriteLine("0-4: Seleccionar objeto | Q/E: Cambiar parte");
+            Console.WriteLine("F5: Guardar escena | F9: Cargar escena");
+            Console.WriteLine("");
+            Console.WriteLine("MODO CÁMARA:");
+            Console.WriteLine("  WASD: Mover | QE: Subir/Bajar");
+            Console.WriteLine("  Flechas: Rotar cámara");
+            Console.WriteLine("");
+            Console.WriteLine("MODO TRANSFORMACIONES:");
+            Console.WriteLine("  WASD: Translación | RF: Rotar Y | TG: Rotar X");
+            Console.WriteLine("  +/-: Escala | XYZ: Reflexión | Space: Reset");
+            Console.WriteLine("═══════════════════════════════════════════════");
         }
         #endregion
 
-        #region Creación de Escena
-        private void CrearEscenaSimple()
+        #region Creación de Escena FINAL
+        private void CrearEscenaFinal()
         {
-            escenario = new Escenario("Setup Simple");
+            escenario = new Escenario("Setup Final");
             renderObjects = new Dictionary<string, List<ParteRenderData>>();
 
             AgregarEscritorio();
             AgregarMonitor();
-            AgregarCPU();
+            AgregarCPUFinal();  // VERSIÓN FINAL CORREGIDA
             AgregarTeclado();
         }
 
         private void AgregarEscritorio()
         {
-            var escritorio = CrearObjeto("Escritorio",
-                new Vector3(0f, -1.5f, 0f),
-                new Vector3(0.4f, 0.3f, 0.2f),
-
-                // Solo la superficie - CENTRADA
-                new ParteInfo("Superficie", Vector3.Zero,
-                             new Vector3(5.0f, 0.1f, 3.0f),
-                             new Vector3(0.4f, 0.3f, 0.2f))
+            var escritorio = CrearObjeto("Escritorio", new Vector3(0f, -1.5f, 0f), new Vector3(0.4f, 0.3f, 0.2f),
+                new ParteInfo("Superficie", Vector3.Zero, new Vector3(5.0f, 0.1f, 3.0f), new Vector3(0.4f, 0.3f, 0.2f))
             );
             escenario.AgregarObjeto(escritorio);
         }
 
         private void AgregarMonitor()
         {
-            var monitor = CrearObjeto("Monitor",
-                new Vector3(0f, -0.5f, -1.0f), // Más atrás y centrado
-                new Vector3(0.1f, 0.1f, 0.1f),
-
-                // 1. Pantalla - CENTRADA en el objeto
-                new ParteInfo("Pantalla", new Vector3(0f, 0.3f, 0f),
-                             new Vector3(2.2f, 1.4f, 0.08f),
-                             new Vector3(0.02f, 0.02f, 0.05f)),
-
-                // 2. Base - CENTRADA abajo
-                new ParteInfo("Base", new Vector3(0f, -0.7f, 0.2f),
-                             new Vector3(0.5f, 0.15f, 0.4f),
-                             new Vector3(0.2f, 0.2f, 0.2f)),
-
-                // 3. Soporte - CONECTA pantalla con base
-                new ParteInfo("Soporte", new Vector3(0f, -0.2f, 0.1f),
-                             new Vector3(0.08f, 0.5f, 0.08f),
-                             new Vector3(0.15f, 0.15f, 0.15f))
+            var monitor = CrearObjeto("Monitor", new Vector3(0f, -0.5f, -1.0f), new Vector3(0.1f, 0.1f, 0.1f),
+                new ParteInfo("Pantalla", new Vector3(0f, 0.3f, 0f), new Vector3(2.2f, 1.4f, 0.08f), new Vector3(0.02f, 0.02f, 0.05f)),
+                new ParteInfo("Base", new Vector3(0f, -0.7f, 0.2f), new Vector3(0.5f, 0.15f, 0.4f), new Vector3(0.2f, 0.2f, 0.2f)),
+                new ParteInfo("Soporte", new Vector3(0f, -0.2f, 0.1f), new Vector3(0.08f, 0.5f, 0.08f), new Vector3(0.15f, 0.15f, 0.15f))
             );
             escenario.AgregarObjeto(monitor);
         }
 
-        private void AgregarCPU()
+        private void AgregarCPUFinal()
         {
-            var cpu = CrearObjeto("CPU",
-                new Vector3(2.0f, -1.0f, 0f), // Mejor posición
-                new Vector3(0.2f, 0.2f, 0.25f),
+            Console.WriteLine("\n=== CREANDO CPU - ANÁLISIS DETALLADO ===");
 
-                // 1. Carcasa principal - CENTRADA
-                new ParteInfo("Carcasa", Vector3.Zero,
-                             new Vector3(0.6f, 1.8f, 0.9f),
-                             new Vector3(0.2f, 0.2f, 0.25f)),
+            var cpu = CrearObjeto("CPU", new Vector3(2.0f, -1.0f, 0f), new Vector3(0.2f, 0.2f, 0.25f),
 
-                // 2. Botón PEGADO al frente de la carcasa
-                new ParteInfo("BotonPower", new Vector3(-0.32f, 0.7f, 0f),
-                             new Vector3(0.08f, 0.08f, 0.08f),
-                             new Vector3(0.8f, 0.2f, 0.2f)),
+                // Carcasa: Centro del objeto CPU
+                new ParteInfo("Carcasa", Vector3.Zero, new Vector3(0.6f, 1.8f, 0.9f), new Vector3(0.2f, 0.2f, 0.25f)),
 
-                // 3. Panel frontal - MÁS DELGADO
-                new ParteInfo("PanelFrontal", new Vector3(-0.31f, 0f, 0f),
-                             new Vector3(0.01f, 1.7f, 0.8f),
-                             new Vector3(0.1f, 0.1f, 0.1f))
+                // Botón: Debe estar EN EL FRENTE de la carcasa
+                // Carcasa va de X: -0.3 a +0.3 (ancho 0.6)
+                // Botón en X: -0.35 estará FUERA del frente
+                new ParteInfo("BotonPower", new Vector3(-0.35f, 0.7f, 0f), new Vector3(0.08f, 0.08f, 0.08f), new Vector3(0.8f, 0.2f, 0.2f)),
+
+                // Panel frontal: Más delgado que el botón
+                new ParteInfo("PanelFrontal", new Vector3(-0.32f, 0f, 0f), new Vector3(0.04f, 1.7f, 0.8f), new Vector3(0.1f, 0.1f, 0.1f))
             );
+
+            Console.WriteLine($"CPU creado en posición: {cpu.Posicion}");
+            Console.WriteLine("=============================================\n");
+
             escenario.AgregarObjeto(cpu);
         }
 
         private void AgregarTeclado()
         {
-            var teclado = CrearObjeto("Teclado",
-                new Vector3(0f, -1.42f, 0.5f), // Más cerca del monitor
-                new Vector3(0.05f, 0.05f, 0.05f),
-
-                // 1. Base del teclado - CENTRADA
-                new ParteInfo("Base", Vector3.Zero,
-                             new Vector3(2.5f, 0.08f, 0.9f),
-                             new Vector3(0.05f, 0.05f, 0.05f)),
-
-                // 2. Barra espaciadora - CENTRADA en la base
-                new ParteInfo("BarraEspacio", new Vector3(0f, 0.06f, 0.15f),
-                             new Vector3(1.0f, 0.03f, 0.12f),
-                             new Vector3(0.15f, 0.15f, 0.15f)),
-
-                // 3. Teclas principales - CUBREN la base
-                new ParteInfo("Teclas", new Vector3(0f, 0.05f, -0.15f),
-                             new Vector3(2.2f, 0.04f, 0.5f),
-                             new Vector3(0.1f, 0.1f, 0.1f))
+            var teclado = CrearObjeto("Teclado", new Vector3(0f, -1.42f, 0.5f), new Vector3(0.05f, 0.05f, 0.05f),
+                new ParteInfo("Base", Vector3.Zero, new Vector3(2.5f, 0.08f, 0.9f), new Vector3(0.05f, 0.05f, 0.05f)),
+                new ParteInfo("BarraEspacio", new Vector3(0f, 0.06f, 0.15f), new Vector3(1.0f, 0.03f, 0.12f), new Vector3(0.15f, 0.15f, 0.15f)),
+                new ParteInfo("Teclas", new Vector3(0f, 0.05f, -0.15f), new Vector3(2.2f, 0.04f, 0.5f), new Vector3(0.1f, 0.1f, 0.1f))
             );
             escenario.AgregarObjeto(teclado);
         }
-        private Objeto CrearObjeto(string nombre, Vector3 posicion, Vector3 colorBase, params ParteInfo[] partes)
+
+        private Objeto CrearObjeto(string nombre, Vector3 posicionObjeto, Vector3 colorBase, params ParteInfo[] partes)
         {
+            Console.WriteLine($"\n--- Creando objeto: {nombre} en {posicionObjeto} ---");
+
             var objeto = new Objeto(nombre);
-            objeto.Posicion = posicion;
+            objeto.Posicion = posicionObjeto;
             objeto.ColorBase = colorBase;
 
             foreach (var info in partes)
             {
+                Console.WriteLine($"  Parte: {info.Nombre} - Pos relativa: {info.Posicion} - Tamaño: {info.Tamaño}");
+
+                // Crear la parte con la posición RELATIVA al objeto
                 var parte = Parte.CrearCubo(info.Nombre, info.Posicion, info.Tamaño, info.Color);
                 objeto.AgregarParte(parte);
             }
 
+            Console.WriteLine($"--- {nombre} completado ---\n");
             return objeto;
         }
         #endregion
 
-        #region Renderizado
+        #region Preparar Buffers CORREGIDO
+        private void PrepararBuffersRenderizado()
+        {
+            Console.WriteLine("\n▓▓▓ PREPARANDO BUFFERS DE RENDERIZADO ▓▓▓");
+
+            foreach (var objeto in escenario.Objetos)
+            {
+                Console.WriteLine($"\n── OBJETO: {objeto.Nombre} ──");
+                Console.WriteLine($"   Posición objeto: {objeto.Posicion}");
+
+                var partesRenderData = new List<ParteRenderData>();
+
+                foreach (var parte in objeto.Partes)
+                {
+                    // CÁLCULO CORRECTO: Posición final = Posición objeto + Posición relativa parte
+                    Vector3 posicionFinal = objeto.Posicion + parte.Posicion;
+
+                    Console.WriteLine($"   ├─ Parte: {parte.Nombre}");
+                    Console.WriteLine($"   │  Posición relativa: {parte.Posicion}");
+                    Console.WriteLine($"   │  Posición final: {posicionFinal}");
+
+                    var vertices = ObtenerVerticesParaParteConPosicion(parte, posicionFinal);
+                    var indices = ObtenerIndicesParaParte(parte);
+
+                    int vao = GL.GenVertexArray();
+                    int vbo = GL.GenBuffer();
+                    int ebo = GL.GenBuffer();
+
+                    GL.BindVertexArray(vao);
+
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                    GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * sizeof(float),
+                                 vertices.ToArray(), BufferUsageHint.StaticDraw);
+
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
+                    GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Count * sizeof(uint),
+                                 indices.ToArray(), BufferUsageHint.StaticDraw);
+
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, VERTICES_POR_NORMAL * sizeof(float), 0);
+                    GL.EnableVertexAttribArray(0);
+
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, VERTICES_POR_NORMAL * sizeof(float), 3 * sizeof(float));
+                    GL.EnableVertexAttribArray(1);
+
+                    GL.BindVertexArray(0);
+
+                    partesRenderData.Add(new ParteRenderData
+                    {
+                        VAO = vao,
+                        VBO = vbo,
+                        EBO = ebo,
+                        IndexCount = indices.Count,
+                        BaseColor = parte.Color != Vector3.One ? parte.Color : objeto.ColorBase,
+                        PosicionBase = posicionFinal,      // Posición final calculada
+                        PosicionRelativa = parte.Posicion, // Posición relativa original
+                        Rotation = parte.Rotacion,
+                        Scale = parte.Escala,
+                        NombreParte = parte.Nombre,
+                        NombreObjeto = objeto.Nombre
+                    });
+                }
+
+                renderObjects[objeto.Nombre] = partesRenderData;
+            }
+
+            Console.WriteLine("\n▓▓▓ BUFFERS PREPARADOS CORRECTAMENTE ▓▓▓\n");
+        }
+
+        // NUEVO MÉTODO: Aplicar posición directamente a los vértices
+        private List<float> ObtenerVerticesParaParteConPosicion(Parte parte, Vector3 posicionFinal)
+        {
+            var vertices = new List<float>();
+
+            foreach (var cara in parte.Caras)
+            {
+                foreach (var vertice in cara.Vertices)
+                {
+                    // Los vértices de la parte están centrados en el origen
+                    // Aplicamos la posición final directamente
+                    vertices.Add(vertice.X + posicionFinal.X);
+                    vertices.Add(vertice.Y + posicionFinal.Y);
+                    vertices.Add(vertice.Z + posicionFinal.Z);
+
+                    var normal = cara.CalcularNormal();
+                    vertices.Add(normal.X);
+                    vertices.Add(normal.Y);
+                    vertices.Add(normal.Z);
+                }
+            }
+
+            return vertices;
+        }
+
+        private List<uint> ObtenerIndicesParaParte(Parte parte)
+        {
+            var indices = new List<uint>();
+            uint baseIndex = 0;
+
+            foreach (var cara in parte.Caras)
+            {
+                foreach (var indice in cara.Indices)
+                {
+                    indices.Add(baseIndex + indice);
+                }
+                baseIndex += (uint)cara.Vertices.Count;
+            }
+
+            return indices;
+        }
+        #endregion
+
+        #region Renderizado SIMPLIFICADO
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             rotationTime += (float)e.Time * VELOCIDAD_ROTACION_AUTO;
 
-            PrepararRender();
-            ConfigurarMatricesVista();
-            RenderizarObjetos();
-            FinalizarRender();
-        }
-
-        private void PrepararRender()
-        {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(shaderProgram);
+
+            ConfigurarMatricesVista();
+            RenderizarObjetos();
+
+            SwapBuffers();
+            base.OnRenderFrame(null);
         }
 
         private void ConfigurarMatricesVista()
@@ -296,7 +376,6 @@ namespace Opentk_2222
             foreach (var kvp in renderObjects)
             {
                 objetoIndex++;
-                string nombreObjeto = kvp.Key;
                 var partesObjeto = kvp.Value;
 
                 int parteIndex = 0;
@@ -305,10 +384,48 @@ namespace Opentk_2222
                     parteIndex++;
 
                     bool aplicarTransformaciones = DebeAplicarTransformaciones(objetoIndex, parteIndex);
-                    Matrix4 model = CalcularMatrizTransformacion(parteData, aplicarTransformaciones);
 
-                    ConfigurarUniformsParte(model, parteData, aplicarTransformaciones);
-                    DibujarParte(parteData);
+                    // MATRIZ MODELO SIMPLIFICADA
+                    Matrix4 model = Matrix4.Identity; // Los vértices ya tienen la posición aplicada
+
+                    if (aplicarTransformaciones)
+                    {
+                        // Aplicar transformaciones manuales
+                        Matrix4 scale = Matrix4.CreateScale(escalaManual);
+                        Matrix4 rotationX = Matrix4.CreateRotationX(rotacionManual.X);
+                        Matrix4 rotationY = Matrix4.CreateRotationY(rotacionManual.Y + rotationTime);
+                        Matrix4 rotationZ = Matrix4.CreateRotationZ(rotacionManual.Z);
+
+                        Matrix4 translation = Matrix4.CreateTranslation(translacionManual);
+
+                        // Reflexiones
+                        Matrix4 reflection = Matrix4.Identity;
+                        if (reflectionX) reflection *= Matrix4.CreateScale(-1, 1, 1);
+                        if (reflectionY) reflection *= Matrix4.CreateScale(1, -1, 1);
+                        if (reflectionZ) reflection *= Matrix4.CreateScale(1, 1, -1);
+
+                        model = scale * rotationX * rotationY * rotationZ * reflection * translation;
+                    }
+                    else
+                    {
+                        // Solo rotación automática
+                        model = Matrix4.CreateRotationY(rotationTime);
+                    }
+
+                    Matrix3 normalMatrix = new Matrix3(Matrix4.Transpose(Matrix4.Invert(model)));
+
+                    SetUniform("model", model);
+                    SetUniform("normalMatrix", normalMatrix);
+
+                    Vector3 color = parteData.BaseColor;
+                    if (aplicarTransformaciones)
+                    {
+                        color = Vector3.Lerp(color, Vector3.One, 0.3f);
+                    }
+                    SetUniform("objectColor", color);
+
+                    GL.BindVertexArray(parteData.VAO);
+                    GL.DrawElements(PrimitiveType.Triangles, parteData.IndexCount, DrawElementsType.UnsignedInt, 0);
                 }
             }
         }
@@ -319,95 +436,15 @@ namespace Opentk_2222
             {
                 case NivelSeleccion.Escenario:
                     return objetoSeleccionado == 0;
-
                 case NivelSeleccion.Objeto:
                     return objetoSeleccionado == 0 || objetoSeleccionado == objIndex;
-
                 case NivelSeleccion.Parte:
                     if (objetoSeleccionado == 0) return true;
                     if (objetoSeleccionado != objIndex) return false;
                     return parteSeleccionada == 0 || parteSeleccionada == parteIndex;
-
                 default:
                     return false;
             }
-        }
-
-        private Vector3 ObtenerCentroObjeto(string nombreObjeto)
-        {
-            switch (nombreObjeto)
-            {
-                case "Escritorio":
-                    return new Vector3(0f, -1.5f, 0f);
-                case "Monitor":
-                    return new Vector3(0f, -0.3f, -0.3f);
-                case "CPU":
-                    return new Vector3(1.8f, -0.8f, -0.2f);
-                case "Teclado":
-                    return new Vector3(0f, -1.4f, 0.8f);
-                default:
-                    return Vector3.Zero;
-            }
-        }
-
-        private Matrix4 CalcularMatrizTransformacion(ParteRenderData parteData, bool aplicarTransformaciones)
-        {
-            if (aplicarTransformaciones)
-            {
-                // TRANSFORMACIONES MANUALES - Método simple y directo
-                Matrix4 scale = Matrix4.CreateScale(escalaManual);
-                Matrix4 rotationX = Matrix4.CreateRotationX(rotacionManual.X);
-                Matrix4 rotationY = Matrix4.CreateRotationY(rotacionManual.Y + rotationTime);
-                Matrix4 rotationZ = Matrix4.CreateRotationZ(rotacionManual.Z);
-
-                // Reflexiones
-                Matrix4 reflection = Matrix4.Identity;
-                if (reflectionX) reflection *= Matrix4.CreateScale(-1, 1, 1);
-                if (reflectionY) reflection *= Matrix4.CreateScale(1, -1, 1);
-                if (reflectionZ) reflection *= Matrix4.CreateScale(1, 1, -1);
-
-                // Posición final (ya viene correcta desde PrepararBuffersRenderizado)
-                Matrix4 translation = Matrix4.CreateTranslation(parteData.Position + translacionManual);
-
-                // ORDEN SIMPLE: Escalar -> Rotar -> Reflejar -> Posicionar
-                return scale * rotationX * rotationY * rotationZ * reflection * translation;
-            }
-            else
-            {
-                // ROTACIÓN AUTOMÁTICA SIMPLE
-                Matrix4 autoRotation = Matrix4.CreateRotationY(rotationTime);
-                Matrix4 translation = Matrix4.CreateTranslation(parteData.Position);
-
-                return autoRotation * translation;
-            }
-        }
-
-        private void ConfigurarUniformsParte(Matrix4 model, ParteRenderData parteData, bool aplicarTransformaciones)
-        {
-            Matrix3 normalMatrix = new Matrix3(Matrix4.Transpose(Matrix4.Invert(model)));
-
-            SetUniform("model", model);
-            SetUniform("normalMatrix", normalMatrix);
-
-            Vector3 color = parteData.BaseColor;
-            if (aplicarTransformaciones)
-            {
-                color = Vector3.Lerp(color, Vector3.One, 0.3f);
-            }
-
-            SetUniform("objectColor", color);
-        }
-
-        private void DibujarParte(ParteRenderData parteData)
-        {
-            GL.BindVertexArray(parteData.VAO);
-            GL.DrawElements(PrimitiveType.Triangles, parteData.IndexCount, DrawElementsType.UnsignedInt, 0);
-        }
-
-        private void FinalizarRender()
-        {
-            SwapBuffers();
-            base.OnRenderFrame(null);
         }
         #endregion
 
@@ -418,15 +455,13 @@ namespace Opentk_2222
             float deltaTime = (float)e.Time;
 
             ProcesarTeclasEspeciales(keyboard);
-            ProcesarCambioNivel(keyboard);
-            ProcesarSeleccionObjetos(keyboard);
-            ProcesarSeleccionPartes(keyboard);
+            ProcesarSeleccion(keyboard);
             ProcesarSerializacion(keyboard);
 
             if (modoTransformacion)
-                ProcesarTransformacionObjetos(keyboard, deltaTime);
+                ProcesarTransformaciones(keyboard, deltaTime);
             else
-                ProcesarInputCamara(keyboard, deltaTime);
+                ProcesarCamara(keyboard, deltaTime);
 
             if (keyboard.IsKeyDown(Key.Escape)) Exit();
             base.OnUpdateFrame(e);
@@ -445,24 +480,18 @@ namespace Opentk_2222
             if (IsKeyJustPressed(Key.Tab))
             {
                 modoTransformacion = !modoTransformacion;
-                Console.WriteLine($"Modo: {(modoTransformacion ? "TRANSFORMACIONES" : "CÁMARA")}");
+                Console.WriteLine($"\n>> Modo: {(modoTransformacion ? "TRANSFORMACIONES" : "CÁMARA")} <<\n");
             }
-        }
 
-        private void ProcesarCambioNivel(KeyboardState keyboard)
-        {
             if (IsKeyJustPressed(Key.C))
             {
                 nivelActual = (NivelSeleccion)(((int)nivelActual + 1) % 3);
                 ResetearTransformaciones();
-
-                string[] niveles = { "ESCENARIO", "OBJETO", "PARTE" };
-                Console.WriteLine($"Nivel: {niveles[(int)nivelActual]}");
-                MostrarSeleccionActual();
+                MostrarEstado();
             }
         }
 
-        private void ProcesarSeleccionObjetos(KeyboardState keyboard)
+        private void ProcesarSeleccion(KeyboardState keyboard)
         {
             string[] nombres = { "Todos", "Escritorio", "Monitor", "CPU", "Teclado" };
 
@@ -473,33 +502,24 @@ namespace Opentk_2222
                 {
                     objetoSeleccionado = i;
                     parteSeleccionada = 0;
-                    Console.WriteLine($"Objeto: {nombres[i]}");
-                    MostrarSeleccionActual();
-                }
-            }
-        }
-
-        private void ProcesarSeleccionPartes(KeyboardState keyboard)
-        {
-            if (nivelActual != NivelSeleccion.Parte) return;
-
-            if (IsKeyJustPressed(Key.Q))
-            {
-                var partes = ObtenerPartesObjetoSeleccionado();
-                if (partes.Count > 0)
-                {
-                    parteSeleccionada = parteSeleccionada > 0 ? parteSeleccionada - 1 : partes.Count;
-                    MostrarSeleccionActual();
+                    MostrarEstado();
                 }
             }
 
-            if (IsKeyJustPressed(Key.E))
+            if (nivelActual == NivelSeleccion.Parte)
             {
-                var partes = ObtenerPartesObjetoSeleccionado();
-                if (partes.Count > 0)
+                if (IsKeyJustPressed(Key.Q) || IsKeyJustPressed(Key.E))
                 {
-                    parteSeleccionada = parteSeleccionada < partes.Count ? parteSeleccionada + 1 : 0;
-                    MostrarSeleccionActual();
+                    var partes = ObtenerPartesObjetoSeleccionado();
+                    if (partes.Count > 0)
+                    {
+                        if (IsKeyJustPressed(Key.Q))
+                            parteSeleccionada = parteSeleccionada > 0 ? parteSeleccionada - 1 : partes.Count;
+                        else
+                            parteSeleccionada = parteSeleccionada < partes.Count ? parteSeleccionada + 1 : 0;
+
+                        MostrarEstado();
+                    }
                 }
             }
         }
@@ -515,7 +535,7 @@ namespace Opentk_2222
             return renderObjects.GetValueOrDefault(nombreObjeto, new List<ParteRenderData>());
         }
 
-        private void MostrarSeleccionActual()
+        private void MostrarEstado()
         {
             Console.Clear();
 
@@ -523,7 +543,7 @@ namespace Opentk_2222
             string[] objetos = { "Todos", "Escritorio", "Monitor", "CPU", "Teclado" };
 
             Console.WriteLine("╔════════════════════════════════════════╗");
-            Console.WriteLine("║           OPENTK 3D EDITOR             ║");
+            Console.WriteLine("║       SETUP 3D - ESTADO ACTUAL        ║");
             Console.WriteLine("╠════════════════════════════════════════╣");
             Console.WriteLine($"║ Modo: {(modoTransformacion ? "TRANSFORMACIÓN" : "CÁMARA")}");
             Console.WriteLine($"║ Nivel: {niveles[(int)nivelActual]}");
@@ -543,49 +563,40 @@ namespace Opentk_2222
             }
 
             Console.WriteLine("╠════════════════════════════════════════╣");
-            Console.WriteLine("║ CONTROLES:                             ║");
-            Console.WriteLine("║ Tab: Cambiar modo                      ║");
-            Console.WriteLine("║ C: Cambiar nivel                       ║");
-            Console.WriteLine("║ 1-4: Seleccionar objeto               ║");
-            Console.WriteLine("║ Q/E: Cambiar parte (modo parte)       ║");
-            Console.WriteLine("║ Space: Reset transformaciones         ║");
-            Console.WriteLine("║ F5: Guardar | F9: Cargar              ║");
+            Console.WriteLine("║ Transformaciones actuales:            ║");
+            Console.WriteLine($"║ Rotación: {rotacionManual}");
+            Console.WriteLine($"║ Translación: {translacionManual}");
+            Console.WriteLine($"║ Escala: {escalaManual}");
+            Console.WriteLine($"║ Reflexión X:{(reflectionX ? "ON" : "OFF")} Y:{(reflectionY ? "ON" : "OFF")} Z:{(reflectionZ ? "ON" : "OFF")}");
             Console.WriteLine("╚════════════════════════════════════════╝");
         }
 
-        private void ProcesarTransformacionObjetos(KeyboardState keyboard, float deltaTime)
+        private void ProcesarTransformaciones(KeyboardState keyboard, float deltaTime)
         {
             float speed = VELOCIDAD_TRANSFORMACION * deltaTime;
 
+            // Translación
             if (keyboard.IsKeyDown(Key.W)) translacionManual += Vector3.UnitZ * -speed;
             if (keyboard.IsKeyDown(Key.S)) translacionManual += Vector3.UnitZ * speed;
             if (keyboard.IsKeyDown(Key.A)) translacionManual += Vector3.UnitX * -speed;
             if (keyboard.IsKeyDown(Key.D)) translacionManual += Vector3.UnitX * speed;
 
+            // Rotación
             if (keyboard.IsKeyDown(Key.R)) rotacionManual.Y += speed;
             if (keyboard.IsKeyDown(Key.F)) rotacionManual.Y -= speed;
             if (keyboard.IsKeyDown(Key.T)) rotacionManual.X += speed;
             if (keyboard.IsKeyDown(Key.G)) rotacionManual.X -= speed;
 
+            // Escala
             if (keyboard.IsKeyDown(Key.Plus)) escalaManual *= 1.02f;
             if (keyboard.IsKeyDown(Key.Minus)) escalaManual *= 0.98f;
 
-            if (IsKeyJustPressed(Key.X))
-            {
-                reflectionX = !reflectionX;
-                Console.WriteLine($"Reflection X: {(reflectionX ? "ON" : "OFF")}");
-            }
-            if (IsKeyJustPressed(Key.Y))
-            {
-                reflectionY = !reflectionY;
-                Console.WriteLine($"Reflection Y: {(reflectionY ? "ON" : "OFF")}");
-            }
-            if (IsKeyJustPressed(Key.Z))
-            {
-                reflectionZ = !reflectionZ;
-                Console.WriteLine($"Reflection Z: {(reflectionZ ? "ON" : "OFF")}");
-            }
+            // Reflexiones
+            if (IsKeyJustPressed(Key.X)) reflectionX = !reflectionX;
+            if (IsKeyJustPressed(Key.Y)) reflectionY = !reflectionY;
+            if (IsKeyJustPressed(Key.Z)) reflectionZ = !reflectionZ;
 
+            // Reset
             if (IsKeyJustPressed(Key.Space))
             {
                 ResetearTransformaciones();
@@ -598,10 +609,10 @@ namespace Opentk_2222
             translacionManual = Vector3.Zero;
             escalaManual = Vector3.One;
             reflectionX = reflectionY = reflectionZ = false;
-            Console.WriteLine("Transformaciones reseteadas");
+            Console.WriteLine("\n>> Transformaciones reseteadas <<\n");
         }
 
-        private void ProcesarInputCamara(KeyboardState keyboard, float deltaTime)
+        private void ProcesarCamara(KeyboardState keyboard, float deltaTime)
         {
             float speed = VELOCIDAD_CAMARA * deltaTime;
             Vector3 forward = Vector3.Normalize(cameraTarget - cameraPos);
@@ -653,7 +664,6 @@ namespace Opentk_2222
         #endregion
 
         #region Serialización
-        // AÑADIMOS LOS MÉTODOS FALTANTES DE SERIALIZACIÓN
         private void ProcesarSerializacion(KeyboardState keyboard)
         {
             if (IsKeyJustPressed(Key.F5))
@@ -667,7 +677,7 @@ namespace Opentk_2222
         {
             try
             {
-                Console.WriteLine("=== GUARDANDO ESCENA ===");
+                Console.WriteLine("\n=== GUARDANDO ESCENA ===");
 
                 var escenaData = new EscenaData(escenario, cameraPos, cameraTarget, lightPos)
                 {
@@ -689,7 +699,7 @@ namespace Opentk_2222
                 Serializar.GuardarComoJson(escenaData, nombreArchivo);
 
                 Console.WriteLine($"Escena guardada: {nombreArchivo}");
-                Console.WriteLine("===========================");
+                Console.WriteLine("========================\n");
             }
             catch (Exception ex)
             {
@@ -701,12 +711,12 @@ namespace Opentk_2222
         {
             try
             {
-                Console.WriteLine("=== CARGANDO ESCENA ===");
+                Console.WriteLine("\n=== CARGANDO ESCENA ===");
 
                 var archivos = Serializar.ListarEscenasGuardadas();
                 if (archivos.Count == 0)
                 {
-                    Console.WriteLine("No hay escenas guardadas. Presiona F5 para guardar la escena actual");
+                    Console.WriteLine("No hay escenas guardadas");
                     return;
                 }
 
@@ -717,7 +727,7 @@ namespace Opentk_2222
                 {
                     RestaurarEscena(escenaData);
                     Console.WriteLine($"Escena cargada: {ultimaEscena}");
-                    Console.WriteLine("========================");
+                    Console.WriteLine("=======================\n");
                 }
             }
             catch (Exception ex)
@@ -800,98 +810,6 @@ void main()
 }";
 
             shaderProgram = CrearProgramaShader(vertexShader, fragmentShader);
-        }
-
-        private void PrepararBuffersRenderizado()
-        {
-            foreach (var objeto in escenario.Objetos)
-            {
-                var partesRenderData = new List<ParteRenderData>();
-
-                foreach (var parte in objeto.Partes)
-                {
-                    var vertices = ObtenerVerticesParaParte(parte);
-                    var indices = ObtenerIndicesParaParte(parte);
-
-                    int vao = GL.GenVertexArray();
-                    int vbo = GL.GenBuffer();
-                    int ebo = GL.GenBuffer();
-
-                    GL.BindVertexArray(vao);
-
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                    GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * sizeof(float),
-                                 vertices.ToArray(), BufferUsageHint.StaticDraw);
-
-                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-                    GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Count * sizeof(uint),
-                                 indices.ToArray(), BufferUsageHint.StaticDraw);
-
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, VERTICES_POR_NORMAL * sizeof(float), 0);
-                    GL.EnableVertexAttribArray(0);
-
-                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, VERTICES_POR_NORMAL * sizeof(float), 3 * sizeof(float));
-                    GL.EnableVertexAttribArray(1);
-
-                    GL.BindVertexArray(0);
-
-                    partesRenderData.Add(new ParteRenderData
-                    {
-                        VAO = vao,
-                        VBO = vbo,
-                        EBO = ebo,
-                        IndexCount = indices.Count,
-                        BaseColor = parte.Color != Vector3.One ? parte.Color : objeto.ColorBase,
-                        // CORRECCIÓN: Posición correcta sin doble suma
-                        Position = objeto.Posicion + parte.Posicion,
-                        Rotation = parte.Rotacion,
-                        Scale = parte.Escala,
-                        NombreParte = parte.Nombre,
-                        NombreObjeto = objeto.Nombre
-                    });
-                }
-
-                renderObjects[objeto.Nombre] = partesRenderData;
-            }
-        }
-
-        private List<float> ObtenerVerticesParaParte(Parte parte)
-        {
-            var vertices = new List<float>();
-
-            foreach (var cara in parte.Caras)
-            {
-                foreach (var vertice in cara.Vertices)
-                {
-                    vertices.Add(vertice.X);
-                    vertices.Add(vertice.Y);
-                    vertices.Add(vertice.Z);
-
-                    var normal = cara.CalcularNormal();
-                    vertices.Add(normal.X);
-                    vertices.Add(normal.Y);
-                    vertices.Add(normal.Z);
-                }
-            }
-
-            return vertices;
-        }
-
-        private List<uint> ObtenerIndicesParaParte(Parte parte)
-        {
-            var indices = new List<uint>();
-            uint baseIndex = 0;
-
-            foreach (var cara in parte.Caras)
-            {
-                foreach (var indice in cara.Indices)
-                {
-                    indices.Add(baseIndex + indice);
-                }
-                baseIndex += (uint)cara.Vertices.Count;
-            }
-
-            return indices;
         }
 
         private int CrearProgramaShader(string vertexSource, string fragmentSource)

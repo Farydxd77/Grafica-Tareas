@@ -5,38 +5,37 @@ namespace Opentk_2222.Clases
     {
         public string Nombre { get; set; }
         public List<Poligono> Caras { get; set; }
-        public Punto CentroMasa { get; private set; }
+        public Punto CentroMasa { get; private set; } // NECESARIO para serialización
         public Vector3 Posicion { get; set; }
-        public Vector3 Rotacion { get; set; }
-        public Vector3 Escala { get; set; }
+        public Vector3 Rotacion { get; set; } // NECESARIO - Game.cs lo usa
+        public Vector3 Escala { get; set; }   // NECESARIO - Game.cs lo usa
         public Vector3 Color { get; set; }
 
         public Parte(string nombre)
         {
-            Nombre = nombre;
+            Nombre = nombre ?? "Parte Sin Nombre"; // FIX: NULL check
             Caras = new List<Poligono>();
-            CentroMasa = new Punto(0, 0, 0);
+            CentroMasa = new Punto(0, 0, 0);     // FIX: Inicializar CentroMasa
             Posicion = Vector3.Zero;
-            Rotacion = Vector3.Zero;
-            Escala = Vector3.One;
+            Rotacion = Vector3.Zero;             // FIX: Inicializar Rotacion
+            Escala = Vector3.One;                // FIX: Inicializar Escala
             Color = Vector3.One;
         }
 
         public void AgregarCara(Poligono cara)
         {
             Caras.Add(cara);
-            CalcularCentroMasa();
+            CalcularCentroMasa(); // FIX: Necesario para serialización
         }
 
         public void AgregarCaras(params Poligono[] caras)
         {
             foreach (var cara in caras)
-            {
                 Caras.Add(cara);
-            }
             CalcularCentroMasa();
         }
 
+        // FIX: Método necesario para mantener consistencia
         private void CalcularCentroMasa()
         {
             if (Caras.Count == 0)
@@ -54,59 +53,39 @@ namespace Opentk_2222.Clases
             CentroMasa = Punto.CalcularCentroMasa(todosPuntos);
         }
 
+        // MÉTODO SIMPLIFICADO PARA CREAR CUBOS
         public static Parte CrearCubo(string nombre, Vector3 posicion, Vector3 tamaño, Vector3 color)
         {
             var parte = new Parte(nombre);
             parte.Posicion = posicion;
             parte.Color = color;
 
-            float x = posicion.X, y = posicion.Y, z = posicion.Z;
-            float w = tamaño.X / 2f, h = tamaño.Y / 2f, d = tamaño.Z / 2f;
+            // Calcular mitades del tamaño
+            float w = tamaño.X * 0.5f;
+            float h = tamaño.Y * 0.5f;
+            float d = tamaño.Z * 0.5f;
 
-            // Vértices del cubo - ORDEN CORRECTO
-            var vertices = new Punto[]
+            // 8 vértices de un cubo centrado en el origen
+            var v = new Punto[]
             {
-                // Cara frontal (Z+)
-                new Punto(x - w, y - h, z + d), // 0 - inferior izquierda
-                new Punto(x + w, y - h, z + d), // 1 - inferior derecha  
-                new Punto(x + w, y + h, z + d), // 2 - superior derecha
-                new Punto(x - w, y + h, z + d), // 3 - superior izquierda
-                
-                // Cara trasera (Z-)
-                new Punto(x - w, y - h, z - d), // 4 - inferior izquierda
-                new Punto(x + w, y - h, z - d), // 5 - inferior derecha
-                new Punto(x + w, y + h, z - d), // 6 - superior derecha
-                new Punto(x - w, y + h, z - d), // 7 - superior izquierda
+                new Punto(-w, -h, +d), new Punto(+w, -h, +d), new Punto(+w, +h, +d), new Punto(-w, +h, +d), // Frente
+                new Punto(-w, -h, -d), new Punto(+w, -h, -d), new Punto(+w, +h, -d), new Punto(-w, +h, -d)  // Atrás
             };
 
-            // CREAR CARAS CON ORDEN CORRECTO (COUNTER-CLOCKWISE CUANDO SE VEN DESDE AFUERA)
-
-            // Cara frontal (Z+) - mirando hacia nosotros
-            var caraFrontal = Poligono.CrearCaraCuadrada(vertices[0], vertices[1], vertices[2], vertices[3]);
-
-            // Cara trasera (Z-) - mirando hacia atrás  
-            var caraTrasera = Poligono.CrearCaraCuadrada(vertices[5], vertices[4], vertices[7], vertices[6]);
-
-            // Cara izquierda (X-)
-            var caraIzquierda = Poligono.CrearCaraCuadrada(vertices[4], vertices[0], vertices[3], vertices[7]);
-
-            // Cara derecha (X+)
-            var caraDerecha = Poligono.CrearCaraCuadrada(vertices[1], vertices[5], vertices[6], vertices[2]);
-
-            // Cara inferior (Y-)
-            var caraInferior = Poligono.CrearCaraCuadrada(vertices[4], vertices[5], vertices[1], vertices[0]);
-
-            // Cara superior (Y+)
-            var caraSuperior = Poligono.CrearCaraCuadrada(vertices[3], vertices[2], vertices[6], vertices[7]);
-
-            parte.AgregarCaras(caraFrontal, caraTrasera, caraIzquierda, caraDerecha, caraInferior, caraSuperior);
+            // 6 caras del cubo (orden counter-clockwise)
+            parte.AgregarCara(Poligono.CrearCaraCuadrada(v[0], v[1], v[2], v[3])); // Frente
+            parte.AgregarCara(Poligono.CrearCaraCuadrada(v[5], v[4], v[7], v[6])); // Atrás
+            parte.AgregarCara(Poligono.CrearCaraCuadrada(v[4], v[0], v[3], v[7])); // Izquierda
+            parte.AgregarCara(Poligono.CrearCaraCuadrada(v[1], v[5], v[6], v[2])); // Derecha
+            parte.AgregarCara(Poligono.CrearCaraCuadrada(v[4], v[5], v[1], v[0])); // Abajo
+            parte.AgregarCara(Poligono.CrearCaraCuadrada(v[3], v[2], v[6], v[7])); // Arriba
 
             return parte;
         }
 
         public override string ToString()
         {
-            return $"{Nombre} - {Caras.Count} caras - Centro: {CentroMasa}";
+            return $"{Nombre} - {Caras.Count} caras - Centro: {CentroMasa} - Pos: {Posicion}";
         }
     }
 }
