@@ -108,13 +108,27 @@ namespace Opentk_2222
             MostrarControles();
         }
 
+        // REEMPLAZA LA FUNCIÓN ConfigurarOpenGL en tu Game.cs
+
         private void ConfigurarOpenGL()
         {
             GL.Enable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.CullFace);
-            GL.ClearColor(0.95f, 0.95f, 0.95f, 1.0f);
-        }
+            GL.DepthFunc(DepthFunction.Less);
 
+            // OPCIONAL: Deshabilitar culling si sigues teniendo problemas
+            // GL.Enable(EnableCap.CullFace);  // Comenta esta línea temporalmente
+            // GL.CullFace(CullFaceMode.Back);  // Y esta también
+
+            // O si quieres mantener culling, asegúrate del orden correcto:
+            GL.Enable(EnableCap.CullFace);
+            GL.CullFace(CullFaceMode.Back);
+            GL.FrontFace(FrontFaceDirection.Ccw); // Counter-clockwise = frente
+
+            GL.ClearColor(0.95f, 0.95f, 0.95f, 1.0f);
+
+            // Opcional: Habilitar wireframe para debug
+            // GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+        }
         private void MostrarControles()
         {
             var controles = new[]

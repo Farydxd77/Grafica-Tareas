@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Opeten-Minecraf")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d8df0254b5092662672aef756fce5beb16604604")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+aea0fa8cd67c2d32067a7599a2c49504fca7b96d")]
 [assembly: System.Reflection.AssemblyProductAttribute("Opeten-Minecraf")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Opeten-Minecraf")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
