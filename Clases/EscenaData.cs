@@ -9,7 +9,7 @@ namespace Opentk_2222.Clases
         public Vector3 PosicionCamara { get; set; }
         public Vector3 ObjetivoCamara { get; set; }
         public Vector3 PosicionLuz { get; set; }
-        public TransformacionData TransformacionActual { get; set; } // NUEVO
+        public TransformacionData TransformacionActual { get; set; }
 
         public EscenaData() { }
 
@@ -27,10 +27,12 @@ namespace Opentk_2222.Clases
         }
     }
 
-    // NUEVA CLASE PARA GUARDAR TRANSFORMACIONES
+    // CLASE MEJORADA PARA GUARDAR TRANSFORMACIONES CON PARTES
     public class TransformacionData
     {
         public int ObjetoSeleccionado { get; set; }
+        public int ParteSeleccionada { get; set; } // NUEVO
+        public int NivelSeleccion { get; set; } // NUEVO: 0=Escenario, 1=Objeto, 2=Parte
         public Vector3 RotacionManual { get; set; }
         public Vector3 TranslacionManual { get; set; }
         public Vector3 EscalaManual { get; set; }
