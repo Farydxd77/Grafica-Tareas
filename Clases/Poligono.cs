@@ -41,24 +41,25 @@ namespace Opentk_2222.Clases
             CentroMasa = Punto.CalcularCentroMasa(Vertices);
         }
 
+        // En Poligono.cs - método más robusto
         public Vector3 CalcularNormal()
         {
             if (Vertices.Count < 3) return Vector3.UnitY;
 
-            // Usar los primeros 3 vértices para calcular la normal
-            Vector3 v1 = Vertices[1].ToVector3() - Vertices[0].ToVector3();
-            Vector3 v2 = Vertices[2].ToVector3() - Vertices[0].ToVector3();
+            // Usar el método de Newell para polígonos más complejos
+            Vector3 normal = Vector3.Zero;
 
-            // Producto cruz para obtener la normal (orden importa para la dirección)
-            Vector3 normal = Vector3.Cross(v1, v2);
-
-            // Normalizar si es posible
-            if (normal.LengthSquared > 0.0001f)
+            for (int i = 0; i < Vertices.Count; i++)
             {
-                return Vector3.Normalize(normal);
+                Vector3 current = Vertices[i].ToVector3();
+                Vector3 next = Vertices[(i + 1) % Vertices.Count].ToVector3();
+
+                normal.X += (current.Y - next.Y) * (current.Z + next.Z);
+                normal.Y += (current.Z - next.Z) * (current.X + next.X);
+                normal.Z += (current.X - next.X) * (current.Y + next.Y);
             }
 
-            return Vector3.UnitY; // Fallback
+            return normal.LengthSquared > 0.0001f ? Vector3.Normalize(normal) : Vector3.UnitY;
         }
 
         public static Poligono CrearCaraCuadrada(Punto p1, Punto p2, Punto p3, Punto p4)

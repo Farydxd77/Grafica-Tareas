@@ -1,9 +1,13 @@
-﻿// ===================== Game.cs CON TRANSFORMACIONES DE PARTES - CÓDIGO LIMPIO =====================
+﻿// ===================== Game.cs CORREGIDO - MÉTODOS FALTANTES AÑADIDOS =====================
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using Opentk_2222.Clases;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Opentk_2222
 {
     internal class Game : GameWindow
@@ -51,9 +55,9 @@ namespace Opentk_2222
         #region Enums y Structs
         public enum NivelSeleccion
         {
-            Escenario = 0,    // Todos los objetos
-            Objeto = 1,       // Objeto específico
-            Parte = 2         // Parte específica
+            Escenario = 0,
+            Objeto = 1,
+            Parte = 2
         }
 
         public struct ParteInfo
@@ -108,27 +112,16 @@ namespace Opentk_2222
             MostrarControles();
         }
 
-        // REEMPLAZA LA FUNCIÓN ConfigurarOpenGL en tu Game.cs
-
         private void ConfigurarOpenGL()
         {
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
-
-            // OPCIONAL: Deshabilitar culling si sigues teniendo problemas
-            // GL.Enable(EnableCap.CullFace);  // Comenta esta línea temporalmente
-            // GL.CullFace(CullFaceMode.Back);  // Y esta también
-
-            // O si quieres mantener culling, asegúrate del orden correcto:
             GL.Enable(EnableCap.CullFace);
             GL.CullFace(CullFaceMode.Back);
-            GL.FrontFace(FrontFaceDirection.Ccw); // Counter-clockwise = frente
-
+            GL.FrontFace(FrontFaceDirection.Ccw);
             GL.ClearColor(0.95f, 0.95f, 0.95f, 1.0f);
-
-            // Opcional: Habilitar wireframe para debug
-            // GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
         }
+
         private void MostrarControles()
         {
             var controles = new[]
@@ -156,7 +149,7 @@ namespace Opentk_2222
         #region Creación de Escena
         private void CrearEscenaSimple()
         {
-            escenario = new Escenario("Setup de Computadora");
+            escenario = new Escenario("Setup Simple");
             renderObjects = new Dictionary<string, List<ParteRenderData>>();
 
             AgregarEscritorio();
@@ -170,7 +163,11 @@ namespace Opentk_2222
             var escritorio = CrearObjeto("Escritorio",
                 new Vector3(0f, -1.5f, 0f),
                 new Vector3(0.4f, 0.3f, 0.2f),
-                new ParteInfo("Superficie", Vector3.Zero, new Vector3(5.0f, 0.1f, 3.0f), new Vector3(0.4f, 0.3f, 0.2f))
+
+                // Solo la superficie - CENTRADA
+                new ParteInfo("Superficie", Vector3.Zero,
+                             new Vector3(5.0f, 0.1f, 3.0f),
+                             new Vector3(0.4f, 0.3f, 0.2f))
             );
             escenario.AgregarObjeto(escritorio);
         }
@@ -178,10 +175,23 @@ namespace Opentk_2222
         private void AgregarMonitor()
         {
             var monitor = CrearObjeto("Monitor",
-                new Vector3(0f, -0.3f, -0.3f),
-                new Vector3(0.15f, 0.15f, 0.15f),
-                new ParteInfo("Pantalla", Vector3.Zero, new Vector3(2.4f, 1.5f, 0.06f), new Vector3(0.02f, 0.02f, 0.05f)),
-                new ParteInfo("Base", new Vector3(0f, -0.8f, 0f), new Vector3(0.6f, 0.2f, 0.4f), new Vector3(0.2f, 0.2f, 0.2f))
+                new Vector3(0f, -0.5f, -1.0f), // Más atrás y centrado
+                new Vector3(0.1f, 0.1f, 0.1f),
+
+                // 1. Pantalla - CENTRADA en el objeto
+                new ParteInfo("Pantalla", new Vector3(0f, 0.3f, 0f),
+                             new Vector3(2.2f, 1.4f, 0.08f),
+                             new Vector3(0.02f, 0.02f, 0.05f)),
+
+                // 2. Base - CENTRADA abajo
+                new ParteInfo("Base", new Vector3(0f, -0.7f, 0.2f),
+                             new Vector3(0.5f, 0.15f, 0.4f),
+                             new Vector3(0.2f, 0.2f, 0.2f)),
+
+                // 3. Soporte - CONECTA pantalla con base
+                new ParteInfo("Soporte", new Vector3(0f, -0.2f, 0.1f),
+                             new Vector3(0.08f, 0.5f, 0.08f),
+                             new Vector3(0.15f, 0.15f, 0.15f))
             );
             escenario.AgregarObjeto(monitor);
         }
@@ -189,10 +199,23 @@ namespace Opentk_2222
         private void AgregarCPU()
         {
             var cpu = CrearObjeto("CPU",
-                new Vector3(1.8f, -0.8f, -0.2f),
-                new Vector3(0.25f, 0.25f, 0.3f),
-                new ParteInfo("Carcasa", Vector3.Zero, new Vector3(0.5f, 1.6f, 0.8f), new Vector3(0.2f, 0.2f, 0.25f)),
-                new ParteInfo("BotonEncendido", new Vector3(-0.15f, -0.5f, 0.43f), new Vector3(0.05f, 0.05f, 0.01f), new Vector3(0.8f, 0.2f, 0.2f))
+                new Vector3(2.0f, -1.0f, 0f), // Mejor posición
+                new Vector3(0.2f, 0.2f, 0.25f),
+
+                // 1. Carcasa principal - CENTRADA
+                new ParteInfo("Carcasa", Vector3.Zero,
+                             new Vector3(0.6f, 1.8f, 0.9f),
+                             new Vector3(0.2f, 0.2f, 0.25f)),
+
+                // 2. Botón PEGADO al frente de la carcasa
+                new ParteInfo("BotonPower", new Vector3(-0.32f, 0.7f, 0f),
+                             new Vector3(0.08f, 0.08f, 0.08f),
+                             new Vector3(0.8f, 0.2f, 0.2f)),
+
+                // 3. Panel frontal - MÁS DELGADO
+                new ParteInfo("PanelFrontal", new Vector3(-0.31f, 0f, 0f),
+                             new Vector3(0.01f, 1.7f, 0.8f),
+                             new Vector3(0.1f, 0.1f, 0.1f))
             );
             escenario.AgregarObjeto(cpu);
         }
@@ -200,14 +223,26 @@ namespace Opentk_2222
         private void AgregarTeclado()
         {
             var teclado = CrearObjeto("Teclado",
-                new Vector3(0f, -1.4f, 0.8f),
+                new Vector3(0f, -1.42f, 0.5f), // Más cerca del monitor
                 new Vector3(0.05f, 0.05f, 0.05f),
-                new ParteInfo("BaseTeclado", Vector3.Zero, new Vector3(2.8f, 0.08f, 0.8f), new Vector3(0.05f, 0.05f, 0.05f)),
-                new ParteInfo("BarraEspaciadora", new Vector3(0f, 0.06f, 0.2f), new Vector3(1.2f, 0.025f, 0.1f), new Vector3(0.15f, 0.15f, 0.15f))
+
+                // 1. Base del teclado - CENTRADA
+                new ParteInfo("Base", Vector3.Zero,
+                             new Vector3(2.5f, 0.08f, 0.9f),
+                             new Vector3(0.05f, 0.05f, 0.05f)),
+
+                // 2. Barra espaciadora - CENTRADA en la base
+                new ParteInfo("BarraEspacio", new Vector3(0f, 0.06f, 0.15f),
+                             new Vector3(1.0f, 0.03f, 0.12f),
+                             new Vector3(0.15f, 0.15f, 0.15f)),
+
+                // 3. Teclas principales - CUBREN la base
+                new ParteInfo("Teclas", new Vector3(0f, 0.05f, -0.15f),
+                             new Vector3(2.2f, 0.04f, 0.5f),
+                             new Vector3(0.1f, 0.1f, 0.1f))
             );
             escenario.AgregarObjeto(teclado);
         }
-
         private Objeto CrearObjeto(string nombre, Vector3 posicion, Vector3 colorBase, params ParteInfo[] partes)
         {
             var objeto = new Objeto(nombre);
@@ -250,7 +285,7 @@ namespace Opentk_2222
             SetUniform("view", view);
             SetUniform("projection", projection);
             SetUniform("lightPos", lightPos);
-            SetUniform("lightColor", Vector3.One);
+            SetUniform("lightColor", new Vector3(1.0f, 1.0f, 0.9f));
             SetUniform("viewPos", cameraPos);
         }
 
@@ -283,48 +318,68 @@ namespace Opentk_2222
             switch (nivelActual)
             {
                 case NivelSeleccion.Escenario:
-                    return objetoSeleccionado == 0; // Todos los objetos
+                    return objetoSeleccionado == 0;
 
                 case NivelSeleccion.Objeto:
                     return objetoSeleccionado == 0 || objetoSeleccionado == objIndex;
 
                 case NivelSeleccion.Parte:
-                    if (objetoSeleccionado == 0) return true; // Todas las partes de todos los objetos
-                    if (objetoSeleccionado != objIndex) return false; // Objeto no seleccionado
-                    return parteSeleccionada == 0 || parteSeleccionada == parteIndex; // Parte específica
+                    if (objetoSeleccionado == 0) return true;
+                    if (objetoSeleccionado != objIndex) return false;
+                    return parteSeleccionada == 0 || parteSeleccionada == parteIndex;
 
                 default:
                     return false;
             }
         }
 
+        private Vector3 ObtenerCentroObjeto(string nombreObjeto)
+        {
+            switch (nombreObjeto)
+            {
+                case "Escritorio":
+                    return new Vector3(0f, -1.5f, 0f);
+                case "Monitor":
+                    return new Vector3(0f, -0.3f, -0.3f);
+                case "CPU":
+                    return new Vector3(1.8f, -0.8f, -0.2f);
+                case "Teclado":
+                    return new Vector3(0f, -1.4f, 0.8f);
+                default:
+                    return Vector3.Zero;
+            }
+        }
+
         private Matrix4 CalcularMatrizTransformacion(ParteRenderData parteData, bool aplicarTransformaciones)
         {
-            Matrix4 model = Matrix4.Identity;
-
             if (aplicarTransformaciones)
             {
-                // REFLECTION
+                // TRANSFORMACIONES MANUALES - Método simple y directo
+                Matrix4 scale = Matrix4.CreateScale(escalaManual);
+                Matrix4 rotationX = Matrix4.CreateRotationX(rotacionManual.X);
+                Matrix4 rotationY = Matrix4.CreateRotationY(rotacionManual.Y + rotationTime);
+                Matrix4 rotationZ = Matrix4.CreateRotationZ(rotacionManual.Z);
+
+                // Reflexiones
                 Matrix4 reflection = Matrix4.Identity;
                 if (reflectionX) reflection *= Matrix4.CreateScale(-1, 1, 1);
                 if (reflectionY) reflection *= Matrix4.CreateScale(1, -1, 1);
                 if (reflectionZ) reflection *= Matrix4.CreateScale(1, 1, -1);
 
-                // SCALE, ROTATION, TRANSLATION
-                Matrix4 scale = Matrix4.CreateScale(escalaManual);
-                Matrix4 rotationX = Matrix4.CreateRotationX(rotacionManual.X);
-                Matrix4 rotationY = Matrix4.CreateRotationY(rotacionManual.Y + rotationTime);
-                Matrix4 rotationZ = Matrix4.CreateRotationZ(rotacionManual.Z);
+                // Posición final (ya viene correcta desde PrepararBuffersRenderizado)
                 Matrix4 translation = Matrix4.CreateTranslation(parteData.Position + translacionManual);
 
-                model = reflection * scale * rotationZ * rotationY * rotationX * translation;
+                // ORDEN SIMPLE: Escalar -> Rotar -> Reflejar -> Posicionar
+                return scale * rotationX * rotationY * rotationZ * reflection * translation;
             }
             else
             {
-                model = Matrix4.CreateRotationY(rotationTime) * Matrix4.CreateTranslation(parteData.Position);
-            }
+                // ROTACIÓN AUTOMÁTICA SIMPLE
+                Matrix4 autoRotation = Matrix4.CreateRotationY(rotationTime);
+                Matrix4 translation = Matrix4.CreateTranslation(parteData.Position);
 
-            return model;
+                return autoRotation * translation;
+            }
         }
 
         private void ConfigurarUniformsParte(Matrix4 model, ParteRenderData parteData, bool aplicarTransformaciones)
@@ -335,8 +390,10 @@ namespace Opentk_2222
             SetUniform("normalMatrix", normalMatrix);
 
             Vector3 color = parteData.BaseColor;
-            if (aplicarTransformaciones && (objetoSeleccionado != 0 || parteSeleccionada != 0))
-                color = color * 1.3f; // Resaltar parte/objeto seleccionado
+            if (aplicarTransformaciones)
+            {
+                color = Vector3.Lerp(color, Vector3.One, 0.3f);
+            }
 
             SetUniform("objectColor", color);
         }
@@ -354,7 +411,7 @@ namespace Opentk_2222
         }
         #endregion
 
-        #region Manejo de Input - MEJORADO
+        #region Manejo de Input
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             var keyboard = Keyboard.GetState();
@@ -415,7 +472,7 @@ namespace Opentk_2222
                 if (IsKeyJustPressed(numKey))
                 {
                     objetoSeleccionado = i;
-                    parteSeleccionada = 0; // Reset parte al cambiar objeto
+                    parteSeleccionada = 0;
                     Console.WriteLine($"Objeto: {nombres[i]}");
                     MostrarSeleccionActual();
                 }
@@ -460,55 +517,59 @@ namespace Opentk_2222
 
         private void MostrarSeleccionActual()
         {
+            Console.Clear();
+
             string[] niveles = { "ESCENARIO", "OBJETO", "PARTE" };
             string[] objetos = { "Todos", "Escritorio", "Monitor", "CPU", "Teclado" };
 
-            Console.WriteLine($"[{niveles[(int)nivelActual]}] {objetos[objetoSeleccionado]}");
+            Console.WriteLine("╔════════════════════════════════════════╗");
+            Console.WriteLine("║           OPENTK 3D EDITOR             ║");
+            Console.WriteLine("╠════════════════════════════════════════╣");
+            Console.WriteLine($"║ Modo: {(modoTransformacion ? "TRANSFORMACIÓN" : "CÁMARA")}");
+            Console.WriteLine($"║ Nivel: {niveles[(int)nivelActual]}");
+            Console.WriteLine($"║ Objeto: {objetos[objetoSeleccionado]}");
 
             if (nivelActual == NivelSeleccion.Parte && objetoSeleccionado > 0)
             {
                 var partes = ObtenerPartesObjetoSeleccionado();
                 if (partes.Count > 0 && parteSeleccionada > 0 && parteSeleccionada <= partes.Count)
                 {
-                    Console.WriteLine($"  └─ Parte: {partes[parteSeleccionada - 1].NombreParte}");
+                    Console.WriteLine($"║ Parte: {partes[parteSeleccionada - 1].NombreParte}");
                 }
                 else if (parteSeleccionada == 0)
                 {
-                    Console.WriteLine($"  └─ Todas las partes ({partes.Count})");
+                    Console.WriteLine($"║ Partes: Todas ({partes.Count})");
                 }
             }
-        }
 
-        private void ProcesarSerializacion(KeyboardState keyboard)
-        {
-            if (IsKeyJustPressed(Key.F5))
-                GuardarEscena();
-
-            if (IsKeyJustPressed(Key.F9))
-                CargarEscena();
+            Console.WriteLine("╠════════════════════════════════════════╣");
+            Console.WriteLine("║ CONTROLES:                             ║");
+            Console.WriteLine("║ Tab: Cambiar modo                      ║");
+            Console.WriteLine("║ C: Cambiar nivel                       ║");
+            Console.WriteLine("║ 1-4: Seleccionar objeto               ║");
+            Console.WriteLine("║ Q/E: Cambiar parte (modo parte)       ║");
+            Console.WriteLine("║ Space: Reset transformaciones         ║");
+            Console.WriteLine("║ F5: Guardar | F9: Cargar              ║");
+            Console.WriteLine("╚════════════════════════════════════════╝");
         }
 
         private void ProcesarTransformacionObjetos(KeyboardState keyboard, float deltaTime)
         {
             float speed = VELOCIDAD_TRANSFORMACION * deltaTime;
 
-            // TRANSLATION
             if (keyboard.IsKeyDown(Key.W)) translacionManual += Vector3.UnitZ * -speed;
             if (keyboard.IsKeyDown(Key.S)) translacionManual += Vector3.UnitZ * speed;
             if (keyboard.IsKeyDown(Key.A)) translacionManual += Vector3.UnitX * -speed;
             if (keyboard.IsKeyDown(Key.D)) translacionManual += Vector3.UnitX * speed;
 
-            // ROTATION
             if (keyboard.IsKeyDown(Key.R)) rotacionManual.Y += speed;
             if (keyboard.IsKeyDown(Key.F)) rotacionManual.Y -= speed;
             if (keyboard.IsKeyDown(Key.T)) rotacionManual.X += speed;
             if (keyboard.IsKeyDown(Key.G)) rotacionManual.X -= speed;
 
-            // SCALE
             if (keyboard.IsKeyDown(Key.Plus)) escalaManual *= 1.02f;
             if (keyboard.IsKeyDown(Key.Minus)) escalaManual *= 0.98f;
 
-            // REFLECTION
             if (IsKeyJustPressed(Key.X))
             {
                 reflectionX = !reflectionX;
@@ -525,7 +586,6 @@ namespace Opentk_2222
                 Console.WriteLine($"Reflection Z: {(reflectionZ ? "ON" : "OFF")}");
             }
 
-            // RESET
             if (IsKeyJustPressed(Key.Space))
             {
                 ResetearTransformaciones();
@@ -547,15 +607,17 @@ namespace Opentk_2222
             Vector3 forward = Vector3.Normalize(cameraTarget - cameraPos);
             Vector3 right = Vector3.Normalize(Vector3.Cross(forward, Vector3.UnitY));
 
-            // Movimiento básico
             if (keyboard.IsKeyDown(Key.W)) cameraPos += forward * speed;
             if (keyboard.IsKeyDown(Key.S)) cameraPos -= forward * speed;
             if (keyboard.IsKeyDown(Key.A)) cameraPos -= right * speed;
             if (keyboard.IsKeyDown(Key.D)) cameraPos += right * speed;
+            if (keyboard.IsKeyDown(Key.Q)) cameraPos += Vector3.UnitY * speed;
+            if (keyboard.IsKeyDown(Key.E)) cameraPos -= Vector3.UnitY * speed;
 
-            // Rotación de cámara
             if (keyboard.IsKeyDown(Key.Left)) RotarCamara(1.5f * deltaTime);
             if (keyboard.IsKeyDown(Key.Right)) RotarCamara(-1.5f * deltaTime);
+            if (keyboard.IsKeyDown(Key.Up)) RotarCamaraVertical(1.0f * deltaTime);
+            if (keyboard.IsKeyDown(Key.Down)) RotarCamaraVertical(-1.0f * deltaTime);
         }
 
         private void RotarCamara(float angulo)
@@ -572,9 +634,35 @@ namespace Opentk_2222
 
             cameraPos = cameraTarget + newToCamera;
         }
+
+        private void RotarCamaraVertical(float angulo)
+        {
+            Vector3 toCamera = cameraPos - cameraTarget;
+            Vector3 right = Vector3.Normalize(Vector3.Cross(toCamera, Vector3.UnitY));
+
+            Matrix4 rotation = Matrix4.CreateFromAxisAngle(right, angulo);
+            Vector3 newToCamera = Vector3.TransformVector(toCamera, rotation);
+
+            float currentAngle = (float)Math.Acos(Vector3.Dot(Vector3.Normalize(newToCamera), Vector3.UnitY));
+
+            if (currentAngle > MathHelper.DegreesToRadians(5f) && currentAngle < MathHelper.DegreesToRadians(175f))
+            {
+                cameraPos = cameraTarget + newToCamera;
+            }
+        }
         #endregion
 
         #region Serialización
+        // AÑADIMOS LOS MÉTODOS FALTANTES DE SERIALIZACIÓN
+        private void ProcesarSerializacion(KeyboardState keyboard)
+        {
+            if (IsKeyJustPressed(Key.F5))
+                GuardarEscena();
+
+            if (IsKeyJustPressed(Key.F9))
+                CargarEscena();
+        }
+
         private void GuardarEscena()
         {
             try
@@ -586,8 +674,8 @@ namespace Opentk_2222
                     TransformacionActual = new TransformacionData
                     {
                         ObjetoSeleccionado = objetoSeleccionado,
-                        ParteSeleccionada = parteSeleccionada, // NUEVO
-                        NivelSeleccion = (int)nivelActual, // NUEVO
+                        ParteSeleccionada = parteSeleccionada,
+                        NivelSeleccion = (int)nivelActual,
                         RotacionManual = rotacionManual,
                         TranslacionManual = translacionManual,
                         EscalaManual = escalaManual,
@@ -648,8 +736,8 @@ namespace Opentk_2222
             {
                 var transform = escenaData.TransformacionActual;
                 objetoSeleccionado = transform.ObjetoSeleccionado;
-                parteSeleccionada = transform.ParteSeleccionada; // NUEVO
-                nivelActual = (NivelSeleccion)transform.NivelSeleccion; // NUEVO
+                parteSeleccionada = transform.ParteSeleccionada;
+                nivelActual = (NivelSeleccion)transform.NivelSeleccion;
                 rotacionManual = transform.RotacionManual;
                 translacionManual = transform.TranslacionManual;
                 escalaManual = transform.EscalaManual;
@@ -754,6 +842,7 @@ void main()
                         EBO = ebo,
                         IndexCount = indices.Count,
                         BaseColor = parte.Color != Vector3.One ? parte.Color : objeto.ColorBase,
+                        // CORRECCIÓN: Posición correcta sin doble suma
                         Position = objeto.Posicion + parte.Posicion,
                         Rotation = parte.Rotacion,
                         Scale = parte.Escala,
