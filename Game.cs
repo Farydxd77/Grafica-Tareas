@@ -1,5 +1,4 @@
-﻿// ===================== Game.cs FINAL CORREGIDO - SISTEMA DE TRANSFORMACIONES COMPLETO =====================
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
@@ -16,7 +15,7 @@ namespace Opentk_2222
         private const float VELOCIDAD_CAMARA = 3.0f;
         private const float VELOCIDAD_TRANSFORMACION = 2.0f;
         private const float VELOCIDAD_ROTACION_AUTO = 0.2f;
-        private const int VERTICES_POR_NORMAL = 6;
+        private const int VERTICES_SIN_NORMAL = 3; // SOLO POSICIÓN, SIN NORMAL
         private const float FOV_GRADOS = 45f;
         private const float NEAR_PLANE = 0.1f;
         private const float FAR_PLANE = 100f;
@@ -83,8 +82,8 @@ namespace Opentk_2222
             public int EBO;
             public int IndexCount;
             public Vector3 BaseColor;
-            public Vector3 PosicionBase;       // Posición base sin transformaciones
-            public Vector3 PosicionRelativa;   // Posición relativa a su objeto
+            public Vector3 PosicionBase;
+            public Vector3 PosicionRelativa;
             public Vector3 Rotation;
             public Vector3 Scale;
             public string NombreParte;
@@ -92,8 +91,7 @@ namespace Opentk_2222
         }
         #endregion
 
-        // Constructor
-        public Game() : base(1024, 768, GraphicsMode.Default, "Setup 3D - SISTEMA CORREGIDO COMPLETO")
+        public Game() : base(1024, 768, GraphicsMode.Default, "Setup 3D - SIN NORMALES FUNCIONAL")
         {
         }
 
@@ -126,7 +124,7 @@ namespace Opentk_2222
         private void MostrarControles()
         {
             Console.WriteLine("═══════════════════════════════════════════════");
-            Console.WriteLine("        SETUP 3D - SISTEMA CORREGIDO          ");
+            Console.WriteLine("  SETUP 3D - SIN NORMALES PERO FUNCIONAL      ");
             Console.WriteLine("═══════════════════════════════════════════════");
             Console.WriteLine("Tab: Cambiar modo (Cámara/Transformaciones)");
             Console.WriteLine("C: Cambiar nivel (Escenario → Objeto → Parte)");
@@ -144,15 +142,15 @@ namespace Opentk_2222
         }
         #endregion
 
-        #region Creación de Escena FINAL
+        #region Creación de Escena
         private void CrearEscenaFinal()
         {
-            escenario = new Escenario("Setup Final");
+            escenario = new Escenario("Setup Sin Normales");
             renderObjects = new Dictionary<string, List<ParteRenderData>>();
 
             AgregarEscritorio();
             AgregarMonitor();
-            AgregarCPUFinal();  // VERSIÓN FINAL CORREGIDA
+            AgregarCPUFinal();
             AgregarTeclado();
         }
 
@@ -176,25 +174,11 @@ namespace Opentk_2222
 
         private void AgregarCPUFinal()
         {
-            Console.WriteLine("\n=== CREANDO CPU - ANÁLISIS DETALLADO ===");
-
             var cpu = CrearObjeto("CPU", new Vector3(2.0f, -1.0f, 0f), new Vector3(0.2f, 0.2f, 0.25f),
-
-                // Carcasa: Centro del objeto CPU
                 new ParteInfo("Carcasa", Vector3.Zero, new Vector3(0.6f, 1.8f, 0.9f), new Vector3(0.2f, 0.2f, 0.25f)),
-
-                // Botón: Debe estar EN EL FRENTE de la carcasa
-                // Carcasa va de X: -0.3 a +0.3 (ancho 0.6)
-                // Botón en X: -0.35 estará FUERA del frente
                 new ParteInfo("BotonPower", new Vector3(-0.35f, 0.7f, 0f), new Vector3(0.08f, 0.08f, 0.08f), new Vector3(0.8f, 0.2f, 0.2f)),
-
-                // Panel frontal: Más delgado que el botón
                 new ParteInfo("PanelFrontal", new Vector3(-0.32f, 0f, 0f), new Vector3(0.04f, 1.7f, 0.8f), new Vector3(0.1f, 0.1f, 0.1f))
             );
-
-            Console.WriteLine($"CPU creado en posición: {cpu.Posicion}");
-            Console.WriteLine("=============================================\n");
-
             escenario.AgregarObjeto(cpu);
         }
 
@@ -210,48 +194,32 @@ namespace Opentk_2222
 
         private Objeto CrearObjeto(string nombre, Vector3 posicionObjeto, Vector3 colorBase, params ParteInfo[] partes)
         {
-            Console.WriteLine($"\n--- Creando objeto: {nombre} en {posicionObjeto} ---");
-
             var objeto = new Objeto(nombre);
             objeto.Posicion = posicionObjeto;
             objeto.ColorBase = colorBase;
 
             foreach (var info in partes)
             {
-                Console.WriteLine($"  Parte: {info.Nombre} - Pos relativa: {info.Posicion} - Tamaño: {info.Tamaño}");
-
-                // Crear la parte con la posición RELATIVA al objeto
                 var parte = Parte.CrearCubo(info.Nombre, info.Posicion, info.Tamaño, info.Color);
                 objeto.AgregarParte(parte);
             }
 
-            Console.WriteLine($"--- {nombre} completado ---\n");
             return objeto;
         }
         #endregion
 
-        #region Preparar Buffers CORREGIDO
+        #region Preparar Buffers SIN NORMALES
         private void PrepararBuffersRenderizado()
         {
-            Console.WriteLine("\n▓▓▓ PREPARANDO BUFFERS DE RENDERIZADO ▓▓▓");
-
             foreach (var objeto in escenario.Objetos)
             {
-                Console.WriteLine($"\n── OBJETO: {objeto.Nombre} ──");
-                Console.WriteLine($"   Posición objeto: {objeto.Posicion}");
-
                 var partesRenderData = new List<ParteRenderData>();
 
                 foreach (var parte in objeto.Partes)
                 {
-                    // CÁLCULO CORRECTO: Posición final = Posición objeto + Posición relativa parte
                     Vector3 posicionFinal = objeto.Posicion + parte.Posicion;
 
-                    Console.WriteLine($"   ├─ Parte: {parte.Nombre}");
-                    Console.WriteLine($"   │  Posición relativa: {parte.Posicion}");
-                    Console.WriteLine($"   │  Posición final: {posicionFinal}");
-
-                    var vertices = ObtenerVerticesParaParteConPosicion(parte, posicionFinal);
+                    var vertices = ObtenerVerticesSinNormales(parte, posicionFinal);
                     var indices = ObtenerIndicesParaParte(parte);
 
                     int vao = GL.GenVertexArray();
@@ -268,11 +236,8 @@ namespace Opentk_2222
                     GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Count * sizeof(uint),
                                  indices.ToArray(), BufferUsageHint.StaticDraw);
 
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, VERTICES_POR_NORMAL * sizeof(float), 0);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, VERTICES_SIN_NORMAL * sizeof(float), 0);
                     GL.EnableVertexAttribArray(0);
-
-                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, VERTICES_POR_NORMAL * sizeof(float), 3 * sizeof(float));
-                    GL.EnableVertexAttribArray(1);
 
                     GL.BindVertexArray(0);
 
@@ -283,10 +248,10 @@ namespace Opentk_2222
                         EBO = ebo,
                         IndexCount = indices.Count,
                         BaseColor = parte.Color != Vector3.One ? parte.Color : objeto.ColorBase,
-                        PosicionBase = posicionFinal,      // Posición final calculada
-                        PosicionRelativa = parte.Posicion, // Posición relativa original
-                        Rotation = parte.Rotacion,
-                        Scale = parte.Escala,
+                        PosicionBase = posicionFinal,
+                        PosicionRelativa = parte.Posicion,
+                        Rotation = Vector3.Zero, // Sin rotaciones individuales
+                        Scale = Vector3.One, // Sin escalas individuales
                         NombreParte = parte.Nombre,
                         NombreObjeto = objeto.Nombre
                     });
@@ -294,12 +259,9 @@ namespace Opentk_2222
 
                 renderObjects[objeto.Nombre] = partesRenderData;
             }
-
-            Console.WriteLine("\n▓▓▓ BUFFERS PREPARADOS CORRECTAMENTE ▓▓▓\n");
         }
 
-        // NUEVO MÉTODO: Aplicar posición directamente a los vértices
-        private List<float> ObtenerVerticesParaParteConPosicion(Parte parte, Vector3 posicionFinal)
+        private List<float> ObtenerVerticesSinNormales(Parte parte, Vector3 posicionFinal)
         {
             var vertices = new List<float>();
 
@@ -307,16 +269,9 @@ namespace Opentk_2222
             {
                 foreach (var vertice in cara.Vertices)
                 {
-                    // Los vértices de la parte están centrados en el origen
-                    // Aplicamos la posición final directamente
                     vertices.Add(vertice.X + posicionFinal.X);
                     vertices.Add(vertice.Y + posicionFinal.Y);
                     vertices.Add(vertice.Z + posicionFinal.Z);
-
-                    var normal = cara.CalcularNormal();
-                    vertices.Add(normal.X);
-                    vertices.Add(normal.Y);
-                    vertices.Add(normal.Z);
                 }
             }
 
@@ -341,7 +296,7 @@ namespace Opentk_2222
         }
         #endregion
 
-        #region Renderizado SIMPLIFICADO
+        #region Renderizado SIN ILUMINACIÓN
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             rotationTime += (float)e.Time * VELOCIDAD_ROTACION_AUTO;
@@ -364,9 +319,6 @@ namespace Opentk_2222
 
             SetUniform("view", view);
             SetUniform("projection", projection);
-            SetUniform("lightPos", lightPos);
-            SetUniform("lightColor", new Vector3(1.0f, 1.0f, 0.9f));
-            SetUniform("viewPos", cameraPos);
         }
 
         private void RenderizarObjetos()
@@ -385,20 +337,16 @@ namespace Opentk_2222
 
                     bool aplicarTransformaciones = DebeAplicarTransformaciones(objetoIndex, parteIndex);
 
-                    // MATRIZ MODELO SIMPLIFICADA
-                    Matrix4 model = Matrix4.Identity; // Los vértices ya tienen la posición aplicada
+                    Matrix4 model = Matrix4.Identity;
 
                     if (aplicarTransformaciones)
                     {
-                        // Aplicar transformaciones manuales
                         Matrix4 scale = Matrix4.CreateScale(escalaManual);
                         Matrix4 rotationX = Matrix4.CreateRotationX(rotacionManual.X);
                         Matrix4 rotationY = Matrix4.CreateRotationY(rotacionManual.Y + rotationTime);
                         Matrix4 rotationZ = Matrix4.CreateRotationZ(rotacionManual.Z);
-
                         Matrix4 translation = Matrix4.CreateTranslation(translacionManual);
 
-                        // Reflexiones
                         Matrix4 reflection = Matrix4.Identity;
                         if (reflectionX) reflection *= Matrix4.CreateScale(-1, 1, 1);
                         if (reflectionY) reflection *= Matrix4.CreateScale(1, -1, 1);
@@ -408,14 +356,10 @@ namespace Opentk_2222
                     }
                     else
                     {
-                        // Solo rotación automática
                         model = Matrix4.CreateRotationY(rotationTime);
                     }
 
-                    Matrix3 normalMatrix = new Matrix3(Matrix4.Transpose(Matrix4.Invert(model)));
-
                     SetUniform("model", model);
-                    SetUniform("normalMatrix", normalMatrix);
 
                     Vector3 color = parteData.BaseColor;
                     if (aplicarTransformaciones)
@@ -448,7 +392,7 @@ namespace Opentk_2222
         }
         #endregion
 
-        #region Manejo de Input
+        #region Manejo de Input COMPLETO
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             var keyboard = Keyboard.GetState();
@@ -575,28 +519,23 @@ namespace Opentk_2222
         {
             float speed = VELOCIDAD_TRANSFORMACION * deltaTime;
 
-            // Translación
             if (keyboard.IsKeyDown(Key.W)) translacionManual += Vector3.UnitZ * -speed;
             if (keyboard.IsKeyDown(Key.S)) translacionManual += Vector3.UnitZ * speed;
             if (keyboard.IsKeyDown(Key.A)) translacionManual += Vector3.UnitX * -speed;
             if (keyboard.IsKeyDown(Key.D)) translacionManual += Vector3.UnitX * speed;
 
-            // Rotación
             if (keyboard.IsKeyDown(Key.R)) rotacionManual.Y += speed;
             if (keyboard.IsKeyDown(Key.F)) rotacionManual.Y -= speed;
             if (keyboard.IsKeyDown(Key.T)) rotacionManual.X += speed;
             if (keyboard.IsKeyDown(Key.G)) rotacionManual.X -= speed;
 
-            // Escala
             if (keyboard.IsKeyDown(Key.Plus)) escalaManual *= 1.02f;
             if (keyboard.IsKeyDown(Key.Minus)) escalaManual *= 0.98f;
 
-            // Reflexiones
             if (IsKeyJustPressed(Key.X)) reflectionX = !reflectionX;
             if (IsKeyJustPressed(Key.Y)) reflectionY = !reflectionY;
             if (IsKeyJustPressed(Key.Z)) reflectionZ = !reflectionZ;
 
-            // Reset
             if (IsKeyJustPressed(Key.Space))
             {
                 ResetearTransformaciones();
@@ -677,8 +616,6 @@ namespace Opentk_2222
         {
             try
             {
-                Console.WriteLine("\n=== GUARDANDO ESCENA ===");
-
                 var escenaData = new EscenaData(escenario, cameraPos, cameraTarget, lightPos)
                 {
                     TransformacionActual = new TransformacionData
@@ -698,8 +635,7 @@ namespace Opentk_2222
                 string nombreArchivo = $"escena_{DateTime.Now:yyyyMMdd_HHmmss}.json";
                 Serializar.GuardarComoJson(escenaData, nombreArchivo);
 
-                Console.WriteLine($"Escena guardada: {nombreArchivo}");
-                Console.WriteLine("========================\n");
+                Console.WriteLine($"\n=== Escena guardada: {nombreArchivo} ===\n");
             }
             catch (Exception ex)
             {
@@ -711,8 +647,6 @@ namespace Opentk_2222
         {
             try
             {
-                Console.WriteLine("\n=== CARGANDO ESCENA ===");
-
                 var archivos = Serializar.ListarEscenasGuardadas();
                 if (archivos.Count == 0)
                 {
@@ -726,8 +660,7 @@ namespace Opentk_2222
                 if (escenaData != null)
                 {
                     RestaurarEscena(escenaData);
-                    Console.WriteLine($"Escena cargada: {ultimaEscena}");
-                    Console.WriteLine("=======================\n");
+                    Console.WriteLine($"\n=== Escena cargada: {ultimaEscena} ===\n");
                 }
             }
             catch (Exception ex)
@@ -758,55 +691,29 @@ namespace Opentk_2222
         }
         #endregion
 
-        #region Shaders y OpenGL
+        #region Shaders SIN NORMALES
         private void InicializarShaders()
         {
             string vertexShader = @"#version 330 core
 layout (location = 0) in vec3 aPosition;
-layout (location = 1) in vec3 aNormal;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat3 normalMatrix;
-
-out vec3 FragPos;
-out vec3 Normal;
 
 void main()
 {
-    FragPos = vec3(model * vec4(aPosition, 1.0));
-    Normal = normalMatrix * aNormal;
-    gl_Position = projection * view * vec4(FragPos, 1.0);
+    gl_Position = projection * view * model * vec4(aPosition, 1.0);
 }";
 
             string fragmentShader = @"#version 330 core
 out vec4 FragColor;
 
-in vec3 FragPos;
-in vec3 Normal;
-
 uniform vec3 objectColor;
-uniform vec3 lightPos;
-uniform vec3 lightColor;
-uniform vec3 viewPos;
 
 void main()
 {
-    vec3 ambient = 0.4 * vec3(1.0, 1.0, 1.0);
-    
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * vec3(1.0, 1.0, 1.0);
-    
-    vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
-    vec3 specular = 0.6 * spec * vec3(1.0, 1.0, 1.0);
-    
-    vec3 result = (ambient + diffuse + specular) * objectColor;
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(objectColor, 1.0);
 }";
 
             shaderProgram = CrearProgramaShader(vertexShader, fragmentShader);
@@ -855,12 +762,6 @@ void main()
         {
             int location = GL.GetUniformLocation(shaderProgram, name);
             GL.UniformMatrix4(location, false, ref matrix);
-        }
-
-        private void SetUniform(string name, Matrix3 matrix)
-        {
-            int location = GL.GetUniformLocation(shaderProgram, name);
-            GL.UniformMatrix3(location, false, ref matrix);
         }
 
         private void SetUniform(string name, Vector3 vector)

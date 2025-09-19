@@ -3,13 +3,16 @@ namespace Opentk_2222.Clases
 {
     public class Parte
     {
+        
         public string Nombre { get; set; }
         public List<Poligono> Caras { get; set; }
-        public Punto CentroMasa { get; private set; } // NECESARIO para serialización
+        public Punto CentroMasa { get; private set; }
+
         public Vector3 Posicion { get; set; }
-        public Vector3 Rotacion { get; set; } // NECESARIO - Game.cs lo usa
-        public Vector3 Escala { get; set; }   // NECESARIO - Game.cs lo usa
+        public Vector3 Rotacion { get; set; }
+        public Vector3 Escala { get; set; }
         public Vector3 Color { get; set; }
+
 
         public Parte(string nombre)
         {
@@ -83,9 +86,9 @@ namespace Opentk_2222.Clases
             return parte;
         }
 
-        public override string ToString()
-        {
-            return $"{Nombre} - {Caras.Count} caras - Centro: {CentroMasa} - Pos: {Posicion}";
-        }
+        //public override string ToString()
+        //{
+        //    return $"{Nombre} - {Caras.Count} caras - Centro: {CentroMasa} - Pos: {Posicion}";
+        //}
     }
 }

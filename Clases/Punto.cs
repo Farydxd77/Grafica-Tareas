@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using OpenTK; // OpenTK 3.x usa OpenTK directamente
-
+﻿using OpenTK; // OpenTK 3.x usa OpenTK directamente
 
 namespace Opentk_2222.Clases
 {
@@ -18,10 +14,9 @@ namespace Opentk_2222.Clases
             Y = y;
             Z = z;
         }
-
-        public Vector3 ToVector3()
+        public Vector3 toVector3()
         {
-            return new Vector3(X, Y, Z);
+            return new Vector3(X,Y,Z);
         }
 
         public static Punto CalcularCentroMasa(List<Punto> puntos)
@@ -33,16 +28,8 @@ namespace Opentk_2222.Clases
             float totalY = puntos.Sum(p => p.Y);
             float totalZ = puntos.Sum(p => p.Z);
 
-            return new Punto(
-                totalX / puntos.Count,
-                totalY / puntos.Count,
-                totalZ / puntos.Count
-            );
+            return new Punto(totalX/ puntos.Count, totalY / puntos.Count, totalZ / puntos.Count);   
         }
 
-        public override string ToString()
-        {
-            return $"({X:F2}, {Y:F2}, {Z:F2})";
-        }
     }
 }

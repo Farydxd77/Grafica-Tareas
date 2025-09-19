@@ -14,7 +14,7 @@ namespace Opentk_2222.Clases
         public Objeto(string nombre)
         {
             Nombre = nombre ?? "Objeto Sin Nombre"; // FIX: NULL check
-            Partes = new List<Parte>();
+            Partes = new List<Parte>(); 
             CentroMasa = new Punto(0, 0, 0);        // FIX: Inicializar CentroMasa
             Posicion = Vector3.Zero;
             Rotacion = Vector3.Zero;                // FIX: Inicializar Rotacion
@@ -35,16 +35,6 @@ namespace Opentk_2222.Clases
             CalcularCentroMasa();
         }
 
-        public void EliminarParte(string nombreParte)
-        {
-            Partes.RemoveAll(p => p.Nombre == nombreParte);
-            CalcularCentroMasa();
-        }
-
-        public Parte BuscarParte(string nombreParte)
-        {
-            return Partes.Find(p => p.Nombre == nombreParte);
-        }
 
         // FIX: Método necesario para mantener consistencia con serialización
         private void CalcularCentroMasa()
@@ -59,61 +49,68 @@ namespace Opentk_2222.Clases
             CentroMasa = Punto.CalcularCentroMasa(centrosMasa);
         }
 
+
+        //public void EliminarParte(string nombreParte)
+        //{
+        //    Partes.RemoveAll(p => p.Nombre == nombreParte);
+        //    CalcularCentroMasa();
+        //}
+
+        //public Parte BuscarParte(string nombreParte)
+        //{
+        //    return Partes.Find(p => p.Nombre == nombreParte);
+        //}
+
         // MÉTODOS NECESARIOS PARA Game.cs - SIMPLIFICADOS
-        public List<float> ObtenerVerticesParaRender()
-        {
-            var vertices = new List<float>();
+        //public List<float> ObtenerVerticesParaRender()
+        //{
+        //    var vertices = new List<float>();
 
-            foreach (var parte in Partes)
-            {
-                foreach (var cara in parte.Caras)
-                {
-                    foreach (var vertice in cara.Vertices)
-                    {
-                        vertices.Add(vertice.X);
-                        vertices.Add(vertice.Y);
-                        vertices.Add(vertice.Z);
+        //    foreach (var parte in Partes)
+        //    {
+        //        foreach (var cara in parte.Caras)
+        //        {
+        //            foreach (var vertice in cara.Vertices)
+        //            {
+        //                vertices.Add(vertice.X);
+        //                vertices.Add(vertice.Y);
+        //                vertices.Add(vertice.Z);        
+        //            }
+        //        }
+        //    }
 
-                        var normal = cara.CalcularNormal();
-                        vertices.Add(normal.X);
-                        vertices.Add(normal.Y);
-                        vertices.Add(normal.Z);
-                    }
-                }
-            }
+        //    return vertices;
+        //}
 
-            return vertices;
-        }
+        //public List<uint> ObtenerIndicesParaRender()
+        //{
+        //    var indices = new List<uint>();
+        //    uint baseIndex = 0;
 
-        public List<uint> ObtenerIndicesParaRender()
-        {
-            var indices = new List<uint>();
-            uint baseIndex = 0;
+        //    foreach (var parte in Partes)
+        //    {
+        //        foreach (var cara in parte.Caras)
+        //        {
+        //            foreach (var indice in cara.Indices)
+        //            {
+        //                indices.Add(baseIndex + indice);
+        //            }
+        //            baseIndex += (uint)cara.Vertices.Count;
+        //        }
+        //    }
 
-            foreach (var parte in Partes)
-            {
-                foreach (var cara in parte.Caras)
-                {
-                    foreach (var indice in cara.Indices)
-                    {
-                        indices.Add(baseIndex + indice);
-                    }
-                    baseIndex += (uint)cara.Vertices.Count;
-                }
-            }
+        //    return indices;
+        //}
 
-            return indices;
-        }
+        //public Vector3 ObtenerColorParte(string nombreParte)
+        //{
+        //    var parte = BuscarParte(nombreParte);
+        //    return parte?.Color != Vector3.One ? parte.Color : ColorBase;
+        //}
 
-        public Vector3 ObtenerColorParte(string nombreParte)
-        {
-            var parte = BuscarParte(nombreParte);
-            return parte?.Color != Vector3.One ? parte.Color : ColorBase;
-        }
-
-        public override string ToString()
-        {
-            return $"{Nombre} - {Partes.Count} partes - Centro: {CentroMasa}";
-        }
+        //public override string ToString()
+        //{
+        //    return $"{Nombre} - {Partes.Count} partes - Centro: {CentroMasa}";
+        //}
     }
 }
