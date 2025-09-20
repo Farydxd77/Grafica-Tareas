@@ -152,6 +152,7 @@ namespace Opentk_2222
             AgregarMonitor();
             AgregarCPUFinal();
             AgregarTeclado();
+            AgregarCPUFinal2();
         }
 
         private void AgregarEscritorio()
@@ -190,6 +191,15 @@ namespace Opentk_2222
                 new ParteInfo("Teclas", new Vector3(0f, 0.05f, -0.15f), new Vector3(2.2f, 0.04f, 0.5f), new Vector3(0.1f, 0.1f, 0.1f))
             );
             escenario.AgregarObjeto(teclado);
+        }
+        private void AgregarCPUFinal2()
+        {
+            var cpu1 = CrearObjeto("CPU2", new Vector3(3.0f, -1.0f, 0f), new Vector3(0.2f, 0.2f, 0.25f),
+                new ParteInfo("Carcasa", Vector3.Zero, new Vector3(0.6f, 1.8f, 0.9f), new Vector3(0.2f, 0.2f, 0.25f)),
+                new ParteInfo("BotonPower", new Vector3(-0.35f, 0.7f, 0f), new Vector3(0.08f, 0.08f, 0.08f), new Vector3(0.8f, 0.2f, 0.2f)),
+                new ParteInfo("PanelFrontal", new Vector3(-0.32f, 0f, 0f), new Vector3(0.04f, 1.7f, 0.8f), new Vector3(0.1f, 0.1f, 0.1f))
+            );
+            escenario.AgregarObjeto(cpu1);
         }
 
         private Objeto CrearObjeto(string nombre, Vector3 posicionObjeto, Vector3 colorBase, params ParteInfo[] partes)
@@ -260,6 +270,7 @@ namespace Opentk_2222
                 renderObjects[objeto.Nombre] = partesRenderData;
             }
         }
+       
 
         private List<float> ObtenerVerticesSinNormales(Parte parte, Vector3 posicionFinal)
         {

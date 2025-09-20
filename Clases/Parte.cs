@@ -1,9 +1,10 @@
 ﻿using OpenTK;
+using System.Runtime.CompilerServices;
 namespace Opentk_2222.Clases
 {
     public class Parte
     {
-        
+
         public string Nombre { get; set; }
         public List<Poligono> Caras { get; set; }
         public Punto CentroMasa { get; private set; }
@@ -38,25 +39,22 @@ namespace Opentk_2222.Clases
             CalcularCentroMasa();
         }
 
-        // FIX: Método necesario para mantener consistencia
         private void CalcularCentroMasa()
         {
-            if (Caras.Count == 0)
+            if ( Caras.Count == 0)
             {
                 CentroMasa = new Punto(0, 0, 0);
                 return;
             }
-
-            var todosPuntos = new List<Punto>();
-            foreach (var cara in Caras)
+            var totalPuntos = new List<Punto>();
+            foreach(var cara in Caras)
             {
-                todosPuntos.AddRange(cara.Vertices);
+                totalPuntos.AddRange(cara.Vertices);
             }
-
-            CentroMasa = Punto.CalcularCentroMasa(todosPuntos);
+            CentroMasa = Punto.CalcularCentroMasa(totalPuntos);
         }
 
-        // MÉTODO SIMPLIFICADO PARA CREAR CUBOS
+        //// MÉTODO SIMPLIFICADO PARA CREAR CUBOS
         public static Parte CrearCubo(string nombre, Vector3 posicion, Vector3 tamaño, Vector3 color)
         {
             var parte = new Parte(nombre);
@@ -85,10 +83,5 @@ namespace Opentk_2222.Clases
 
             return parte;
         }
-
-        //public override string ToString()
-        //{
-        //    return $"{Nombre} - {Caras.Count} caras - Centro: {CentroMasa} - Pos: {Posicion}";
-        //}
     }
 }

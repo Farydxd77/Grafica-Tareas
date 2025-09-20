@@ -23,6 +23,7 @@ namespace Opentk_2222.Clases
                 Indices.Add(index);
             }
         }
+     
         public static Poligono CrearCaraCuadrada( Punto p1, Punto p2, Punto p3, Punto p4)
         {
             var cara = new Poligono();  

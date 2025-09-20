@@ -1,45 +1,31 @@
-﻿namespace Opentk_2222.Clases
+﻿using static Opentk_2222.Game;
+
+namespace Opentk_2222.Clases
 {
     public class Escenario
     {
         public List<Objeto> Objetos { get; set; }
         public string Nombre { get; set; }
 
-        public Escenario(string nombre = "Escenario Principal")
+        public Escenario(string nombre)
         {
-            Nombre = nombre;
+            Nombre = nombre ?? "Escenario Sin Nombre";
             Objetos = new List<Objeto>();
         }
 
-        public void AgregarObjeto(Objeto objeto)
+        public void AgregarObjeto(Objeto obj)
         {
-            Objetos.Add(objeto);
+            Objetos.Add(obj);
         }
-
-        public void AgregarObjetos(params Objeto[] objetos)
+        public void AgregarObjetos(params Objeto[] objd)
         {
-            foreach (var objeto in objetos)
-                Objetos.Add(objeto);
+            foreach (var obj in objd)
+                Objetos.Add(obj);
         }
-
-        public void EliminarObjeto(string nombre)
-        {
-            Objetos.RemoveAll(o => o.Nombre == nombre);
-        }
-
-        public Objeto BuscarObjeto(string nombre)
-        {
-            return Objetos.Find(o => o.Nombre == nombre);
-        }
-
-        public void LimpiarEscenario()
+        public void Limpiar()
         {
             Objetos.Clear();
         }
 
-        //public override string ToString()
-        //{
-        //    return $"{Nombre} - {Objetos.Count} objetos";
-        //}
     }
 }
